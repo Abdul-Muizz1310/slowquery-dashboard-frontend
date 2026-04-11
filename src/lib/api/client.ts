@@ -28,7 +28,11 @@ import {
 } from "./schemas";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
-const SWITCH_BRANCH_TIMEOUT_MS = 45_000;
+// Branch switching can be a few seconds (engine rebuild + connection
+// pool rollover) but should never exceed the default request budget.
+// If the backend genuinely takes longer the user will see a timeout
+// toast and can retry.
+const SWITCH_BRANCH_TIMEOUT_MS = DEFAULT_TIMEOUT_MS;
 
 interface RequestOptions {
   method?: "GET" | "POST";
