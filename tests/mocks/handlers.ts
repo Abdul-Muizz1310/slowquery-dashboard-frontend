@@ -8,11 +8,50 @@
 import { HttpResponse, http } from "msw";
 import { detailsById } from "./fixtures/fingerprint-detail";
 import { fingerprintsList } from "./fixtures/fingerprints";
+import {
+  branchSwitchedToFast,
+  heartbeat,
+  tickOrdersCreatedAt,
+  tickUsersOrders,
+} from "./fixtures/stream-events";
 import { switchToFastOk, switchToSlowOk } from "./fixtures/switch-response";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "https://slowquery-demo-backend.onrender.com";
 
+function sseFrame(payload: string): string {
+  return `data: ${payload}\n\n`;
+}
+
+const sseFrames = [
+  sseFrame(JSON.stringify(tickOrdersCreatedAt)),
+  // a deliberately malformed frame in the middle, asserts the iterator
+  // stays open and skips it (spec 00 case 21).
+  sseFrame("not-json"),
+  sseFrame(JSON.stringify(tickUsersOrders)),
+  sseFrame(JSON.stringify(heartbeat)),
+  sseFrame(JSON.stringify(branchSwitchedToFast)),
+];
+
 export const handlers = [
+  http.get(`${API}/_slowquery/api/stream`, () => {
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        const encoder = new TextEncoder();
+        for (const frame of sseFrames) {
+          controller.enqueue(encoder.encode(frame));
+        }
+        controller.close();
+      },
+    });
+    return new HttpResponse(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  }),
+
   http.get(`${API}/_slowquery/queries`, () => {
     return HttpResponse.json(fingerprintsList);
   }),

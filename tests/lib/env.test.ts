@@ -1,11 +1,19 @@
 /**
  * Spec 00 — env.ts parse at module load.
  * Cases 7, 13, 14, 23 (security), plus happy case 1.
+ *
+ * Each test calls vi.resetModules() so the env module re-evaluates
+ * against the freshly-set process.env values; otherwise vitest caches
+ * the first import for the rest of the file.
  */
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("spec 00 — env", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
   it("case 1 happy: env.apiUrl equals NEXT_PUBLIC_API_URL with trailing slash normalised", async () => {
     process.env.NEXT_PUBLIC_API_URL = "https://slowquery-demo-backend.onrender.com";
     process.env.NEXT_PUBLIC_SITE_URL = "http://localhost:3000";
