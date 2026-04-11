@@ -18,9 +18,9 @@ import { HttpError, NetworkError, ParseError, TimeoutError } from "./errors";
 import {
   type BranchName,
   type Fingerprint,
+  type FingerprintDetail,
   FingerprintDetailSchema,
   FingerprintsListSchema,
-  type FingerprintDetail,
   type StreamEvent,
   StreamEventSchema,
   type SwitchBranchResponse,
