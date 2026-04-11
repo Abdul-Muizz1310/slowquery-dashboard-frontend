@@ -42,10 +42,11 @@ describe("spec 00 — env", () => {
   });
 
   it("case 23 security: http:// in production throws ConfigError", async () => {
-    const originalNode = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
-    process.env.NEXT_PUBLIC_API_URL = "http://slowquery-demo-backend.onrender.com";
+    const env = process.env as Record<string, string | undefined>;
+    const originalNode = env.NODE_ENV;
+    env.NODE_ENV = "production";
+    env.NEXT_PUBLIC_API_URL = "http://slowquery-demo-backend.onrender.com";
     await expect(import("@/lib/env")).rejects.toThrow(/https/);
-    process.env.NODE_ENV = originalNode;
+    env.NODE_ENV = originalNode;
   });
 });
