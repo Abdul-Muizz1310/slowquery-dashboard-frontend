@@ -21,12 +21,14 @@ export const RULE_SEVERITY: Readonly<Record<string, Severity>> = Object.freeze({
 });
 
 const SEVERITY_CLASSES: Readonly<Record<Severity, string>> = Object.freeze({
-  red: "bg-red-100 text-red-900 border-red-300 px-2 py-0.5 rounded text-xs font-mono",
-  yellow: "bg-yellow-100 text-yellow-900 border-yellow-300 px-2 py-0.5 rounded text-xs font-mono",
-  orange: "bg-orange-100 text-orange-900 border-orange-300 px-2 py-0.5 rounded text-xs font-mono",
+  red: "bg-error/10 text-error border-error/30 px-2 py-0.5 rounded text-xs font-mono",
+  yellow: "bg-warning/10 text-warning border-warning/30 px-2 py-0.5 rounded text-xs font-mono",
+  orange:
+    "bg-accent-flame/10 text-accent-flame border-accent-flame/30 px-2 py-0.5 rounded text-xs font-mono",
   neutral:
-    "bg-zinc-100 text-zinc-700 border-zinc-300 px-2 py-0.5 rounded text-xs font-mono neutral",
-  purple: "bg-purple-100 text-purple-900 border-purple-300 px-2 py-0.5 rounded text-xs font-mono",
+    "bg-surface/50 text-fg-muted border-border-bright px-2 py-0.5 rounded text-xs font-mono neutral",
+  purple:
+    "bg-[#8b5cf6]/10 text-[#8b5cf6] border-[#8b5cf6]/30 px-2 py-0.5 rounded text-xs font-mono",
 });
 
 function severityFor(suggestion: Suggestion): Severity {

@@ -19,10 +19,10 @@ export function TopNSelector({ top, onChange }: TopNSelectorProps) {
           type="button"
           key={preset}
           onClick={() => onChange(preset)}
-          className={`text-xs px-2 py-1 rounded border ${
+          className={`text-xs px-2 py-1 rounded border font-mono ${
             top === preset
-              ? "border-blue-300 bg-blue-50 text-blue-900"
-              : "border-zinc-300 bg-white text-zinc-700"
+              ? "border-accent-flame/30 bg-accent-flame/10 text-accent-flame"
+              : "border-border-bright bg-surface text-fg-muted"
           }`}
         >
           {preset}

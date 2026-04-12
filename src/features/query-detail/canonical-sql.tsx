@@ -32,7 +32,13 @@ const MonacoEditor = dynamic(
       const Editor = mod.Editor;
       function Wrapped({ sql }: { sql: string }) {
         return (
-          <Editor value={sql} language="sql" options={MONACO_OPTIONS} height="240px" theme="vs" />
+          <Editor
+            value={sql}
+            language="sql"
+            options={MONACO_OPTIONS}
+            height="240px"
+            theme="vs-dark"
+          />
         );
       }
       Wrapped.displayName = "MonacoSqlEditor";
@@ -50,8 +56,8 @@ interface CanonicalSqlProps {
 
 export function CanonicalSql({ sql }: CanonicalSqlProps) {
   return (
-    <div className="rounded border border-zinc-200 bg-zinc-50">
-      <pre className="m-0 p-3 font-mono text-xs text-zinc-900 whitespace-pre overflow-x-auto">
+    <div className="rounded border border-border bg-surface/50">
+      <pre className="m-0 p-3 font-mono text-xs text-foreground whitespace-pre overflow-x-auto">
         {sql}
       </pre>
       <div className="hidden">

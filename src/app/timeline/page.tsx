@@ -1,11 +1,5 @@
-/**
- * `/timeline` — live p95 chart (spec 03).
- *
- * RSC shell that fetches the seed list once on the server, then hands
- * off to the LiveTimeline client component which opens the SSE
- * connection on mount.
- */
-
+import { PageFrame } from "@/components/terminal/PageFrame";
+import { TerminalWindow } from "@/components/terminal/TerminalWindow";
 import { normaliseTop } from "@/features/timeline/buffer";
 import { LiveTimeline } from "@/features/timeline/live-timeline";
 import { apiClient } from "@/lib/api/client";
@@ -25,21 +19,37 @@ export default async function Page({ searchParams }: PageProps) {
   try {
     seed = await apiClient.listFingerprints();
   } catch {
-    // The timeline page degrades gracefully — even with an empty seed
-    // the SSE-driven LiveTimeline will populate as events arrive.
+    // Degrades gracefully — SSE will populate when it connects.
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-zinc-200 px-6 py-4">
-        <a href="/" className="text-sm text-blue-700 hover:underline">
-          ← back to fingerprints
-        </a>
-        <h1 className="mt-2 text-lg font-semibold text-zinc-900">live timeline</h1>
-      </header>
-      <main className="px-6 py-6">
-        <LiveTimeline seed={seed} top={top} />
-      </main>
-    </div>
+    <PageFrame
+      active="timeline"
+      statusLeft="slowquery.dashboard ~/timeline"
+      statusRight={
+        <>
+          <span className="tabular-nums">top {top}</span>
+          <span className="text-fg-faint">·</span>
+          <span>
+            sse <span className="text-accent-flame">streaming</span>
+          </span>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="font-mono text-2xl font-semibold tracking-tight text-foreground">
+            live <span className="text-accent-flame">p95</span> timeline
+          </h1>
+          <p className="font-mono text-sm text-fg-muted">
+            real-time latency per fingerprint via SSE from the backend drainer.
+          </p>
+        </div>
+
+        <TerminalWindow title="p95_timeline" statusDot="flame" statusLabel="live" strong>
+          <LiveTimeline seed={seed} top={top} />
+        </TerminalWindow>
+      </div>
+    </PageFrame>
   );
 }

@@ -13,9 +13,9 @@ interface ErrorStateProps {
 export function ErrorState({ error }: ErrorStateProps) {
   if (error instanceof HttpError) {
     return (
-      <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+      <div className="rounded border border-error/30 bg-error/10 p-4 text-sm text-error font-mono">
         <p className="font-medium">Backend returned {error.status}</p>
-        <p className="mt-1 text-red-800">The slowquery-demo-backend responded with an error.</p>
+        <p className="mt-1 text-error">The slowquery-demo-backend responded with an error.</p>
         <a href="/" className="mt-2 inline-block underline">
           Retry
         </a>
@@ -24,7 +24,7 @@ export function ErrorState({ error }: ErrorStateProps) {
   }
   if (error instanceof TimeoutError) {
     return (
-      <div className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+      <div className="rounded border border-warning/30 bg-warning/10 p-4 text-sm text-warning font-mono">
         <p className="font-medium">Backend timed out</p>
         <a href="/" className="mt-2 inline-block underline">
           Retry
@@ -34,9 +34,9 @@ export function ErrorState({ error }: ErrorStateProps) {
   }
   if (error instanceof ParseError) {
     return (
-      <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+      <div className="rounded border border-error/30 bg-error/10 p-4 text-sm text-error font-mono">
         <p className="font-medium">Backend response looked malformed</p>
-        <p className="mt-1 text-red-800">{error.path}</p>
+        <p className="mt-1 text-error">{error.path}</p>
         <a href="/" className="mt-2 inline-block underline">
           Retry
         </a>
@@ -44,7 +44,7 @@ export function ErrorState({ error }: ErrorStateProps) {
     );
   }
   return (
-    <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+    <div className="rounded border border-error/30 bg-error/10 p-4 text-sm text-error font-mono">
       <p className="font-medium">Something went wrong</p>
       <a href="/" className="mt-2 inline-block underline">
         Retry

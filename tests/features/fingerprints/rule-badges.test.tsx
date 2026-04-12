@@ -28,7 +28,7 @@ describe("spec 01 — RuleBadges", () => {
       />,
     );
     const badge = screen.getByText(/sort_without_index/i);
-    expect(badge.className).toMatch(/yellow/);
+    expect(badge.className).toMatch(/warning/);
   });
 
   it("case 5 happy: rule-sourced badge renders before llm-sourced badge", async () => {

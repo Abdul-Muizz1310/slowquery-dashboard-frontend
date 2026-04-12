@@ -21,7 +21,7 @@ function CopyButton({ value }: { value: string }) {
   return (
     <button
       type="button"
-      className="text-xs px-2 py-1 rounded border border-zinc-300 bg-white hover:bg-zinc-50"
+      className="text-xs px-2 py-1 rounded border border-border-bright bg-surface hover:bg-surface-hover font-mono"
       onClick={() => {
         if (typeof navigator !== "undefined" && navigator.clipboard) {
           void navigator.clipboard.writeText(value);
@@ -35,7 +35,7 @@ function CopyButton({ value }: { value: string }) {
 
 function AppliedBadge({ at }: { at: string }) {
   return (
-    <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-900 border border-green-300">
+    <span className="text-xs px-2 py-1 rounded bg-success/10 text-success border border-success/30 font-mono">
       Applied
     </span>
   );
@@ -46,23 +46,23 @@ export function SuggestionCard({ suggestion }: SuggestionCardProps) {
   switch (suggestion.kind) {
     case "index": {
       return (
-        <div className="rounded border border-zinc-200 bg-white p-4 mt-3">
+        <div className="rounded border border-border bg-surface p-4 mt-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs uppercase text-zinc-500">
+            <span className="text-xs uppercase text-fg-faint font-mono">
               {suggestion.source} · {suggestion.rule ?? "index"}
             </span>
             {isApplied && <AppliedBadge at={suggestion.applied_at as string} />}
           </div>
-          <pre className="m-0 p-2 font-mono text-xs bg-zinc-50 rounded border border-zinc-200 overflow-x-auto">
+          <pre className="m-0 p-2 font-mono text-xs bg-surface/50 rounded border border-border overflow-x-auto">
             {suggestion.sql ?? ""}
           </pre>
-          <p className="mt-2 text-sm text-zinc-700">{suggestion.rationale}</p>
+          <p className="mt-2 text-sm text-fg-muted font-mono">{suggestion.rationale}</p>
           <div className="mt-3 flex gap-2">
             {suggestion.sql && <CopyButton value={suggestion.sql} />}
             <button
               type="button"
               disabled={isApplied}
-              className="text-xs px-2 py-1 rounded border border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-xs px-2 py-1 rounded border border-accent-flame/30 bg-accent-flame/10 text-accent-flame hover:bg-accent-flame/20 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
             >
               Apply on fast branch
             </button>
@@ -72,13 +72,13 @@ export function SuggestionCard({ suggestion }: SuggestionCardProps) {
     }
     case "rewrite": {
       return (
-        <div className="rounded border border-zinc-200 bg-white p-4 mt-3">
-          <div className="text-xs uppercase text-zinc-500 mb-2">
+        <div className="rounded border border-border bg-surface p-4 mt-3">
+          <div className="text-xs uppercase text-fg-faint font-mono mb-2">
             rewrite · {suggestion.rule ?? ""}
           </div>
-          <p className="text-sm text-zinc-700">{suggestion.rationale}</p>
+          <p className="text-sm text-fg-muted font-mono">{suggestion.rationale}</p>
           {suggestion.sql && (
-            <pre className="m-0 mt-2 p-2 font-mono text-xs bg-zinc-50 rounded border border-zinc-200">
+            <pre className="m-0 mt-2 p-2 font-mono text-xs bg-surface/50 rounded border border-border">
               {suggestion.sql}
             </pre>
           )}
@@ -88,11 +88,11 @@ export function SuggestionCard({ suggestion }: SuggestionCardProps) {
     case "denormalize":
     case "partition": {
       return (
-        <div className="rounded border border-zinc-200 bg-white p-4 mt-3">
-          <div className="text-xs uppercase text-zinc-500 mb-2">
+        <div className="rounded border border-border bg-surface p-4 mt-3">
+          <div className="text-xs uppercase text-fg-faint font-mono mb-2">
             {suggestion.kind} · {suggestion.source}
           </div>
-          <p className="text-sm text-zinc-700">{suggestion.rationale}</p>
+          <p className="text-sm text-fg-muted font-mono">{suggestion.rationale}</p>
         </div>
       );
     }
@@ -110,7 +110,7 @@ interface SuggestionListProps {
 export function SuggestionList({ suggestions }: SuggestionListProps) {
   if (suggestions.length === 0) {
     return (
-      <div className="rounded border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 mt-3">
+      <div className="rounded border border-border bg-surface/50 p-4 text-sm text-fg-muted font-mono mt-3">
         No suggestions yet — rules didn't match and the LLM fallback is disabled. See{" "}
         <a
           className="underline"

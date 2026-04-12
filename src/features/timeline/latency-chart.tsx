@@ -63,7 +63,7 @@ export function LatencyChart({ series, errorOverlay }: LatencyChartProps) {
         ))}
       </LineChart>
       {errorOverlay && (
-        <div className="absolute top-2 right-2 rounded border border-red-200 bg-red-50 px-3 py-1 text-xs text-red-900">
+        <div className="absolute top-2 right-2 rounded border border-error/30 bg-error/10 px-3 py-1 text-xs text-error font-mono">
           <span className="font-mono">{errorOverlay.status}</span> {errorOverlay.message}
         </div>
       )}

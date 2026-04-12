@@ -9,7 +9,7 @@
 
 import type { ReactNode } from "react";
 
-export const DEMO_BODY_CLASS = "overflow-hidden bg-zinc-950 text-zinc-100";
+export const DEMO_BODY_CLASS = "overflow-hidden bg-background text-foreground";
 export const DEMO_CLAMP_CLASS = "mx-auto my-auto w-full max-w-[1280px] max-h-[720px] aspect-video";
 
 export default function DemoLayout({ children }: { children: ReactNode }) {

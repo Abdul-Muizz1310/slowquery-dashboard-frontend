@@ -30,7 +30,7 @@ export function SortHeader({
   return (
     <th
       scope="col"
-      className="px-3 py-2 text-left font-medium text-zinc-600 cursor-pointer select-none"
+      className="px-3 py-2 text-left font-medium text-fg-muted font-mono cursor-pointer select-none"
       onClick={() => onChange({ sort: field, order: nextOrder })}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onChange({ sort: field, order: nextOrder });

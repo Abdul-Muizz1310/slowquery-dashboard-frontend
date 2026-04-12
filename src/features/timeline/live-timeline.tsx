@@ -65,8 +65,8 @@ export function LiveTimeline({ seed, top }: LiveTimelineProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium text-zinc-700">live p95</h2>
-        <span data-testid="stream-status" className="text-xs text-zinc-500">
+        <h2 className="text-sm font-medium text-fg-muted font-mono">live p95</h2>
+        <span data-testid="stream-status" className="text-xs text-fg-faint font-mono">
           {status}
         </span>
       </div>

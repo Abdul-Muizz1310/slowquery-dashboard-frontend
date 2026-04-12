@@ -26,13 +26,13 @@ export function SwitchToast({ status }: SwitchToastProps) {
   if (status.kind === "idle") return null;
   if (status.kind === "success") {
     return (
-      <div className="rounded border border-green-300 bg-green-50 px-3 py-2 text-xs text-green-900">
+      <div className="rounded border border-success/30 bg-success/10 px-3 py-2 text-xs text-success font-mono">
         Switched to {status.active} in {formatLatency(status.latencyMs)}
       </div>
     );
   }
   return (
-    <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-900">
+    <div className="rounded border border-error/30 bg-error/10 px-3 py-2 text-xs text-error font-mono">
       {status.message}
     </div>
   );

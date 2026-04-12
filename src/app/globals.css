@@ -1,26 +1,207 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────
+ * slowquery-dashboard — performance-terminal aesthetic
+ * structure from paper-trail / inkprint; accent shifted to
+ * orange/red to carry the "flame graph / latency spike" identity.
+ * ───────────────────────────────────────────────────────────── */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --surface: #12121a;
+  --surface-hover: #1a1a25;
+  --card: #12121a;
+  --card-foreground: #fafafa;
+
+  /* Text scale */
+  --fg-muted: #8a8aa3;
+  --fg-faint: #4a4a63;
+
+  /* Borders */
+  --border: #1e1e2e;
+  --border-bright: #2a2a3d;
+  --input: #1e1e2e;
+
+  /* Accents — orange is the signature (flame), red is hot */
+  --accent-flame: #f97316;
+  --accent-flame-soft: rgba(249, 115, 22, 0.1);
+  --accent-red: #ef4444;
+  --accent-green: #22c55e;
+  --primary: #f97316;
+  --primary-foreground: #0a0a0a;
+  --ring: #f97316;
+
+  /* Semantic */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  /* Shadows / glow */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 8px 30px rgb(0 0 0 / 0.6);
+  --glow-sm: 0 0 20px rgb(249 115 22 / 0.15);
+  --glow-md: 0 0 40px rgb(249 115 22 / 0.2);
+  --glow-lg: 0 0 80px rgb(249 115 22 / 0.15);
+
+  /* macOS traffic lights */
+  --mac-red: #ff5f56;
+  --mac-yellow: #ffbd2e;
+  --mac-green: #27c93f;
+
+  /* Radii */
+  --radius: 0.625rem;
+
+  /* Chart colours for recharts */
+  --chart-1: #f97316;
+  --chart-2: #ef4444;
+  --chart-3: #22c55e;
+  --chart-4: #3b82f6;
+  --chart-5: #f59e0b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-border: var(--border);
+  --color-border-bright: var(--border-bright);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+  --color-accent-flame: var(--accent-flame);
+  --color-accent-flame-soft: var(--accent-flame-soft);
+  --color-accent-red: var(--accent-red);
+  --color-accent-green: var(--accent-green);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-mac-red: var(--mac-red);
+  --color-mac-yellow: var(--mac-yellow);
+  --color-mac-green: var(--mac-green);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
+  }
+  html {
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--accent-flame-soft);
+    color: var(--accent-flame);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─────────────────────────────────────────────────────────────
+ * Background grid + orange glow — atmospheric layer
+ * ───────────────────────────────────────────────────────────── */
+
+.bg-grid {
+  background-image:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(249, 115, 22, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      rgba(239, 68, 68, 0.04) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 1px 1px,
+      rgba(255, 255, 255, 0.06) 1px,
+      transparent 0
+    );
+  background-size: 100% 100%, 100% 100%, 24px 24px;
+  background-attachment: fixed, fixed, fixed;
+}
+
+.bg-scanlines::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0,
+    transparent 2px,
+    rgba(255, 255, 255, 0.015) 2px,
+    rgba(255, 255, 255, 0.015) 3px
+  );
+  z-index: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Terminal window chrome
+ * ───────────────────────────────────────────────────────────── */
+
+.terminal-glow {
+  box-shadow:
+    0 0 0 1px var(--border),
+    var(--shadow-lg),
+    var(--glow-sm);
+}
+
+.terminal-glow-strong {
+  box-shadow:
+    0 0 0 1px var(--border-bright),
+    var(--shadow-lg),
+    var(--glow-md);
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Blinking cursor for terminal prompts
+ * ───────────────────────────────────────────────────────────── */
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Pulsing dot (live indicators)
+ * ───────────────────────────────────────────────────────────── */
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgb(249 115 22 / 0.6); }
+  70% { box-shadow: 0 0 0 8px rgb(249 115 22 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(249 115 22 / 0); }
+}
+.pulse-ring {
+  animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

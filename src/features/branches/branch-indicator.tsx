@@ -11,8 +11,8 @@ export function BranchIndicator() {
   const active = useBranchStore((s) => s.activeBranch);
   const colour =
     active === "fast"
-      ? "bg-green-100 text-green-900 border-green-300 green"
-      : "bg-red-100 text-red-900 border-red-300 red";
+      ? "bg-success/10 text-success border-success/30 green"
+      : "bg-error/10 text-error border-error/30 red";
   return (
     <span
       data-testid="branch-indicator"

@@ -1,13 +1,6 @@
 /**
  * Spec 01 — FingerprintsTable + EmptyState. Pure presentational
  * component, server-rendered, prop-driven, unit-testable.
- *
- * The fingerprint detail (which carries suggestions for the rule
- * badges) lives one fetch away — for the table view we just show the
- * fingerprint id / latency / call counts. Suggestions for the badge
- * column are passed in via the optional `suggestionsByFingerprint`
- * prop so the page composition layer can join the two queries server
- * side without coupling the table to the api client.
  */
 
 import Link from "next/link";
@@ -59,14 +52,22 @@ export function FingerprintsTable({
 }: FingerprintsTableProps) {
   if (fingerprints.length === 0) {
     return (
-      <div className="rounded border border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-600">
-        <p className="font-medium text-zinc-800">No fingerprints captured yet</p>
-        <p className="mt-1">
+      <div className="rounded-lg border border-border bg-surface/50 p-6 text-sm text-fg-muted">
+        <p className="font-mono font-medium text-foreground">No fingerprints captured yet</p>
+        <p className="mt-1 font-mono">
           Run some traffic against the demo backend at{" "}
-          <code className="font-mono text-xs">/users</code>,{" "}
-          <code className="font-mono text-xs">/orders</code>, or{" "}
-          <code className="font-mono text-xs">/users/&#123;id&#125;/orders</code> to seed
-          fingerprints.
+          <code className="rounded border border-border bg-surface-hover px-1 py-0.5 text-xs text-accent-flame">
+            /users
+          </code>
+          ,{" "}
+          <code className="rounded border border-border bg-surface-hover px-1 py-0.5 text-xs text-accent-flame">
+            /orders
+          </code>
+          , or{" "}
+          <code className="rounded border border-border bg-surface-hover px-1 py-0.5 text-xs text-accent-flame">
+            /users/&#123;id&#125;/orders
+          </code>{" "}
+          to seed fingerprints.
         </p>
       </div>
     );
@@ -74,8 +75,8 @@ export function FingerprintsTable({
   const sorted = sortFingerprints(fingerprints, sort, order);
   const limited = compact ? sorted.slice(0, 5) : sorted;
   return (
-    <table className="w-full text-sm border-collapse">
-      <thead className="border-b border-zinc-200 text-left text-xs uppercase text-zinc-500">
+    <table className="w-full text-sm border-collapse font-mono">
+      <thead className="border-b border-border text-left text-[10px] uppercase tracking-[0.15em] text-fg-faint">
         <tr>
           <th scope="col" className="px-3 py-2">
             fingerprint
@@ -107,21 +108,32 @@ export function FingerprintsTable({
         {limited.map((fp) => {
           const suggestions = suggestionsByFingerprint?.[fp.id] ?? [];
           return (
-            <tr key={fp.id} className="border-b border-zinc-100 hover:bg-zinc-50">
-              <td className="px-3 py-2">
+            <tr
+              key={fp.id}
+              className="border-b border-border/50 transition-colors hover:bg-surface-hover"
+            >
+              <td className="px-3 py-2 max-w-xs">
                 <Link
                   href={`/queries/${fp.id}`}
-                  className="text-blue-700 hover:underline font-mono text-xs"
+                  className="text-accent-flame hover:underline text-xs truncate block"
                 >
                   <code>{fp.fingerprint}</code>
                 </Link>
               </td>
-              <td className="px-3 py-2 text-right tabular-nums">{formatCount(fp.call_count)}</td>
-              <td className="px-3 py-2 text-right tabular-nums">{fp.total_ms}</td>
-              <td className="px-3 py-2 text-right tabular-nums">{formatMsCell(fp.p50_ms)}</td>
-              <td className="px-3 py-2 text-right tabular-nums">{formatMsCell(fp.p95_ms)}</td>
-              <td className="px-3 py-2 text-right tabular-nums">{formatMsCell(fp.p99_ms)}</td>
-              <td className="px-3 py-2 text-zinc-500 text-xs">
+              <td className="px-3 py-2 text-right tabular-nums text-foreground">
+                {formatCount(fp.call_count)}
+              </td>
+              <td className="px-3 py-2 text-right tabular-nums text-foreground">{fp.total_ms}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-fg-muted">
+                {formatMsCell(fp.p50_ms)}
+              </td>
+              <td className="px-3 py-2 text-right tabular-nums text-accent-flame">
+                {formatMsCell(fp.p95_ms)}
+              </td>
+              <td className="px-3 py-2 text-right tabular-nums text-fg-muted">
+                {formatMsCell(fp.p99_ms)}
+              </td>
+              <td className="px-3 py-2 text-fg-faint text-xs">
                 {formatRelative(new Date(fp.last_seen))}
               </td>
               <td className="px-3 py-2">

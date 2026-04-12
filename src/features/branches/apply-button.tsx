@@ -21,7 +21,7 @@ export function ApplyOnFastBranchButton() {
       onClick={() => {
         void switchBranch("fast");
       }}
-      className="text-xs px-3 py-1.5 rounded border border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="text-xs px-3 py-1.5 rounded border border-accent-flame/30 bg-accent-flame/10 text-accent-flame hover:bg-accent-flame/20 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
     >
       {label}
     </button>
