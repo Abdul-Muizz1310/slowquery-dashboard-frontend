@@ -27,13 +27,25 @@ export default async function Page({ searchParams }: PageProps) {
   const { sort, order } = normaliseSortParams(await searchParams);
   let result: Awaited<ReturnType<typeof apiClient.listFingerprints>> | null = null;
   let error: ApiError | null = null;
-  try {
-    result = await apiClient.listFingerprints();
-  } catch (err) {
-    if (isApiError(err)) {
-      error = err;
-    } else {
-      throw err;
+  // Render free tier cold-starts return empty during the first ~30s while
+  // the DB pool initializes. Retry once after a short delay so the page
+  // renders with data instead of the empty state on first visit.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      result = await apiClient.listFingerprints();
+      if (result.length > 0 || attempt > 0) break;
+      // Empty on first try — backend may be cold-starting. Wait and retry.
+      await new Promise((r) => setTimeout(r, 3000));
+    } catch (err) {
+      if (attempt > 0) {
+        if (isApiError(err)) {
+          error = err;
+        } else {
+          throw err;
+        }
+      }
+      // First attempt failed — wait and retry.
+      await new Promise((r) => setTimeout(r, 3000));
     }
   }
 

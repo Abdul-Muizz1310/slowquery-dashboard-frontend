@@ -28,10 +28,10 @@ import {
 } from "./schemas";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
-// Branch switching can be a few seconds (engine rebuild + connection
-// pool rollover) but should never exceed the default request budget.
-// If the backend genuinely takes longer the user will see a timeout
-// toast and can retry.
+// Render free tier cold-starts can take 30-60s. Server-side fetches
+// (RSC / page load) use a longer timeout so the page waits for the
+// backend to wake instead of showing an empty state immediately.
+const SERVER_FETCH_TIMEOUT_MS = 45_000;
 const SWITCH_BRANCH_TIMEOUT_MS = DEFAULT_TIMEOUT_MS;
 
 interface RequestOptions {
@@ -178,10 +178,14 @@ async function* streamFingerprints(signal: AbortSignal): AsyncIterable<StreamEve
 
 export const apiClient = {
   listFingerprints(): Promise<Fingerprint[]> {
-    return request("/_slowquery/queries", FingerprintsListSchema);
+    return request("/_slowquery/queries", FingerprintsListSchema, {
+      timeoutMs: SERVER_FETCH_TIMEOUT_MS,
+    });
   },
   getFingerprint(id: string): Promise<FingerprintDetail> {
-    return request(`/_slowquery/queries/${id}`, FingerprintDetailSchema);
+    return request(`/_slowquery/queries/${id}`, FingerprintDetailSchema, {
+      timeoutMs: SERVER_FETCH_TIMEOUT_MS,
+    });
   },
   switchBranch(target: BranchName): Promise<SwitchBranchResponse> {
     return request("/branches/switch", SwitchBranchResponseSchema, {

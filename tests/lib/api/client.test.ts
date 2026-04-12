@@ -79,14 +79,15 @@ describe("spec 00 — apiClient", () => {
 
   it("case 18 failure: request exceeding timeout throws TimeoutError", async () => {
     server.use(
-      http.get(`${API}/_slowquery/queries`, async () => {
+      http.post(`${API}/branches/switch`, async () => {
         await new Promise((r) => setTimeout(r, 50_000));
-        return HttpResponse.json([]);
+        return HttpResponse.json({});
       }),
     );
     const { apiClient } = await import("@/lib/api/client");
     const { TimeoutError } = await import("@/lib/api/errors");
-    await expect(apiClient.listFingerprints()).rejects.toBeInstanceOf(TimeoutError);
+    // switchBranch uses the default 10s timeout (not the 45s server fetch)
+    await expect(apiClient.switchBranch("fast")).rejects.toBeInstanceOf(TimeoutError);
   }, 15_000);
 
   it("case 19 failure: fetch reject (network) throws NetworkError", async () => {
