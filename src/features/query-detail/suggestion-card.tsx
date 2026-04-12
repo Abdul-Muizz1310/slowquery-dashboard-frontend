@@ -1,6 +1,9 @@
 /**
  * Spec 02 — SuggestionCard discriminated-union renderer + SuggestionList.
  *
+ * Marked "use client" because CopyButton uses navigator.clipboard via
+ * an onClick handler, which Server Components can't serialize.
+ *
  * The card body is a switch over `kind`. The `default:` case falls
  * through to a `never` assertion so adding a new kind to the schema
  * forces every callsite to handle it.
@@ -10,6 +13,8 @@
  * time so the button doesn't pull the zustand store + branch service
  * into pages that don't need them.
  */
+
+"use client";
 
 import type { Suggestion } from "@/lib/api/schemas";
 
