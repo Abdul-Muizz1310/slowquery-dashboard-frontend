@@ -6,7 +6,7 @@
 ![node](https://img.shields.io/badge/node-24-3c873a?style=flat-square&logo=node.js&logoColor=white)
 ![license](https://img.shields.io/github/license/Abdul-Muizz1310/slowquery-dashboard-frontend?style=flat-square)
 
-**Live:** _coming in S5 at_ `https://slowquery-dashboard-frontend.vercel.app`
+**Live:** https://slowquery-dashboard-frontend.vercel.app
 **Backend:** https://slowquery-demo-backend.onrender.com
 
 Phase 4c of the slowquery-detective portfolio project. Consumes the dashboard API and SSE stream exposed by [`slowquery-demo-backend`](https://github.com/Abdul-Muizz1310/slowquery-demo-backend) on `/_slowquery/*`.
@@ -60,10 +60,10 @@ pnpm lint && pnpm typecheck && pnpm build    # full CI gate locally
 ## Phase status
 
 - [x] S1 — scaffold Next.js 16 + Biome + Vitest + Playwright, CI green on empty project
-- [ ] S2 — feature specs (`docs/specs/00..05`)
-- [ ] S3 — red tests for every enumerated case
-- [ ] S4 — green implementation of every spec
-- [ ] S5 — Vercel deploy + wired to live backend
+- [x] S2 — feature specs (`docs/specs/00..05`)
+- [x] S3 — red tests for every enumerated case (124 cases across 20 test files)
+- [x] S4 — green implementation of every spec (124/124 vitest green)
+- [x] S5 — Vercel deploy + wired to live backend at `slowquery-dashboard-frontend.vercel.app`
 - [ ] S6 — acceptance criteria green, README gif, `v0.1.0` tag
 
 See [`docs/PLAN.md §9.4`](https://github.com/Abdul-Muizz1310/slowquery-detective/blob/main/docs/PLAN.md) for the full phase plan.
