@@ -22,6 +22,25 @@ interface LiveTimelineProps {
   top: number;
 }
 
+const STATUS_DISPLAY: Record<StreamStatus, { label: string; className: string }> = {
+  connecting: {
+    label: "connecting",
+    className: "text-accent-flame",
+  },
+  live: {
+    label: "live",
+    className: "text-success",
+  },
+  reconnecting: {
+    label: "reconnecting",
+    className: "text-warning",
+  },
+  fallback: {
+    label: "fallback polling",
+    className: "text-fg-faint",
+  },
+};
+
 export function LiveTimeline({ seed, top }: LiveTimelineProps) {
   const safeTop = normaliseTop(top);
   const seedTop = [...seed].sort((a, b) => b.total_ms - a.total_ms).slice(0, safeTop);
@@ -45,8 +64,6 @@ export function LiveTimeline({ seed, top }: LiveTimelineProps) {
           setStatus((prev) => statusReducer(prev, { kind: "first-event" }));
         }
       } catch {
-        // sse failed; the test harness uses status reducer for the
-        // fallback path. real reconnect logic lands in s5 polish.
         setStatus((prev) => statusReducer(prev, { kind: "fail" }));
       }
     })();
@@ -62,13 +79,23 @@ export function LiveTimeline({ seed, top }: LiveTimelineProps) {
     points: (buffer.byId.get(fp.id) ?? []).map((p95, i) => ({ t: i, p95 })),
   }));
 
+  const display = STATUS_DISPLAY[status];
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-medium text-fg-muted font-mono">live p95</h2>
-        <span data-testid="stream-status" className="text-xs text-fg-faint font-mono">
-          {status}
-        </span>
+        <div className="flex items-center gap-2">
+          {status === "live" && (
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-success pulse-ring" />
+          )}
+          {status === "connecting" && (
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent-flame pulse-ring" />
+          )}
+          <span data-testid="stream-status" className={`text-xs font-mono ${display.className}`}>
+            {display.label}
+          </span>
+        </div>
       </div>
       <LatencyChart series={series} />
     </div>
