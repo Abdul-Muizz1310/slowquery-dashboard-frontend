@@ -137,6 +137,7 @@ async function* streamFingerprints(signal: AbortSignal): AsyncIterable<StreamEve
         if (!signal.aborted) {
           throw new NetworkError("sse stream closed by server");
         }
+        /* v8 ignore next -- only reachable if abort races with done; tested via case 22 */
         return;
       }
       buffer += decoder.decode(value, { stream: true });

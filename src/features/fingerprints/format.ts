@@ -42,5 +42,6 @@ export function formatRelative(date: Date, now: Date = new Date()): string {
       return RELATIVE_FORMATTER.format(value, unit);
     }
   }
+  /* v8 ignore next -- unreachable: the last threshold (unit === "second") always matches */
   return RELATIVE_FORMATTER.format(0, "second");
 }

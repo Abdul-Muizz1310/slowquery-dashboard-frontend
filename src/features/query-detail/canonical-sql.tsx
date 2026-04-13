@@ -30,6 +30,7 @@ const MonacoEditor = dynamic(
   () =>
     import("@monaco-editor/react").then((mod) => {
       const Editor = mod.Editor;
+      /* v8 ignore next 7 -- Monaco loads client-side only; untestable in jsdom */
       function Wrapped({ sql }: { sql: string }) {
         return (
           <Editor

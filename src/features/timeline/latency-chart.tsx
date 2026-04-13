@@ -74,7 +74,9 @@ export function LatencyChart({ series, errorOverlay }: LatencyChartProps) {
                 fontSize: 11,
                 color: "var(--foreground)",
               }}
+              /* v8 ignore start -- only invoked on mouse hover; untestable in jsdom */
               labelFormatter={(v) => `point ${v}`}
+              /* v8 ignore stop */
             />
             <Legend
               wrapperStyle={{
