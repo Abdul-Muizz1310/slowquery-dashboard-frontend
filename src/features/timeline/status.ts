@@ -6,23 +6,30 @@
 
 export type StreamStatus = "connecting" | "live" | "reconnecting" | "fallback";
 
+export type StreamState = {
+  status: StreamStatus;
+  failCount: number;
+};
+
 type StatusAction = { kind: "first-event" } | { kind: "fail" } | { kind: "reset" };
 
 const FAIL_THRESHOLD = 3;
-let failCount = 0;
 
-export function statusReducer(state: StreamStatus, action: StatusAction): StreamStatus {
+export const initialStreamState: StreamState = { status: "connecting", failCount: 0 };
+
+export function statusReducer(state: StreamState, action: StatusAction): StreamState {
   switch (action.kind) {
     case "first-event":
-      failCount = 0;
-      return "live";
-    case "fail":
-      failCount += 1;
-      if (failCount >= FAIL_THRESHOLD) return "fallback";
-      return "reconnecting";
+      return { status: "live", failCount: 0 };
+    case "fail": {
+      const failCount = state.failCount + 1;
+      return {
+        status: failCount >= FAIL_THRESHOLD ? "fallback" : "reconnecting",
+        failCount,
+      };
+    }
     case "reset":
-      failCount = 0;
-      return "connecting";
+      return { status: "connecting", failCount: 0 };
     default: {
       const _never: never = action;
       return _never;

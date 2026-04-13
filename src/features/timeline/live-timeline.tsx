@@ -15,7 +15,7 @@ import { apiClient } from "@/lib/api/client";
 import type { Fingerprint } from "@/lib/api/schemas";
 import { applyEvent, type Buffer, normaliseTop } from "./buffer";
 import { type ChartSeries, LatencyChart } from "./latency-chart";
-import { type StreamStatus, statusReducer } from "./status";
+import { type StreamState, type StreamStatus, initialStreamState, statusReducer } from "./status";
 
 interface LiveTimelineProps {
   seed: readonly Fingerprint[];
@@ -49,7 +49,8 @@ export function LiveTimeline({ seed, top }: LiveTimelineProps) {
   };
 
   const [buffer, setBuffer] = useState<Buffer>(initial);
-  const [status, setStatus] = useState<StreamStatus>("connecting");
+  const [streamState, setStreamState] = useState<StreamState>(initialStreamState);
+  const status: StreamStatus = streamState.status;
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -61,10 +62,10 @@ export function LiveTimeline({ seed, top }: LiveTimelineProps) {
         for await (const ev of apiClient.streamFingerprints(controller.signal)) {
           if (cancelled) return;
           setBuffer((prev) => applyEvent(prev, ev));
-          setStatus((prev) => statusReducer(prev, { kind: "first-event" }));
+          setStreamState((prev) => statusReducer(prev, { kind: "first-event" }));
         }
       } catch {
-        setStatus((prev) => statusReducer(prev, { kind: "fail" }));
+        setStreamState((prev) => statusReducer(prev, { kind: "fail" }));
       }
     })();
     return () => {

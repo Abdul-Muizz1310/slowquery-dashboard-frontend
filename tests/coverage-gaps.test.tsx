@@ -583,13 +583,13 @@ describe("status.ts uncovered", () => {
   it("reset action returns connecting and clears fail count", async () => {
     const { statusReducer } = await import("@/features/timeline/status");
     // First accumulate some fails
-    statusReducer("live", { kind: "fail" });
+    statusReducer({ status: "live", failCount: 0 }, { kind: "fail" });
     // Then reset
-    const result = statusReducer("reconnecting", { kind: "reset" });
-    expect(result).toBe("connecting");
+    const result = statusReducer({ status: "reconnecting", failCount: 2 }, { kind: "reset" });
+    expect(result.status).toBe("connecting");
     // After reset, one fail should not immediately go to fallback
-    const afterOneFail = statusReducer("live", { kind: "fail" });
-    expect(afterOneFail).toBe("reconnecting");
+    const afterOneFail = statusReducer({ status: "live", failCount: 0 }, { kind: "fail" });
+    expect(afterOneFail.status).toBe("reconnecting");
   });
 });
 
@@ -723,7 +723,7 @@ describe("live-timeline.tsx SSE event processing and error catch", () => {
   it("SSE error in useEffect transitions status to reconnecting/fallback", async () => {
     // Reset the status module's fail counter before this test
     const { statusReducer } = await import("@/features/timeline/status");
-    statusReducer("reconnecting", { kind: "reset" });
+    statusReducer({ status: "reconnecting", failCount: 2 }, { kind: "reset" });
 
     server.use(
       http.get(`${API}/_slowquery/api/stream`, () => {
@@ -816,7 +816,7 @@ describe("status.ts exhaustive check", () => {
   it("unknown action kind hits default branch and returns the action", async () => {
     const { statusReducer } = await import("@/features/timeline/status");
     // The default branch assigns to `never` and returns it; at runtime this is just the value
-    const result = statusReducer("live", { kind: "bogus" } as unknown as { kind: "first-event" });
+    const result = statusReducer({ status: "live", failCount: 0 }, { kind: "bogus" } as unknown as { kind: "first-event" });
     // result is the `_never` variable which is the action itself
     expect(result).toBeTruthy();
   });

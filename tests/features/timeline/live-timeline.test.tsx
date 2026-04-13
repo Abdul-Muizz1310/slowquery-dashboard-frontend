@@ -31,8 +31,8 @@ describe("spec 03 — LiveTimeline", () => {
 
   it("case 3 happy: StreamStatus transitions connecting -> live on first event", async () => {
     const { statusReducer } = await import("@/features/timeline/status");
-    const next = statusReducer("connecting", { kind: "first-event" });
-    expect(next).toBe("live");
+    const next = statusReducer({ status: "connecting", failCount: 0 }, { kind: "first-event" });
+    expect(next.status).toBe("live");
   });
 
   it("case 5 happy: branch_switched event produces a <BranchMarker> with server switched_at", async () => {
@@ -88,10 +88,10 @@ describe("spec 03 — LiveTimeline", () => {
 
   it("case 12 failure: 3 consecutive SSE failures trigger fallback polling mode", async () => {
     const { statusReducer } = await import("@/features/timeline/status");
-    let s = statusReducer("live", { kind: "fail" });
+    let s = statusReducer({ status: "live", failCount: 0 }, { kind: "fail" });
     s = statusReducer(s, { kind: "fail" });
     s = statusReducer(s, { kind: "fail" });
-    expect(s).toBe("fallback");
+    expect(s.status).toBe("fallback");
   });
 
   it("case 14 failure: unknown event kind is logged and skipped", async () => {
