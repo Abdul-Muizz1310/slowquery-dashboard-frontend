@@ -15,7 +15,7 @@ import { apiClient } from "@/lib/api/client";
 import type { Fingerprint } from "@/lib/api/schemas";
 import { applyEvent, type Buffer, normaliseTop } from "./buffer";
 import { type ChartSeries, LatencyChart } from "./latency-chart";
-import { type StreamState, type StreamStatus, initialStreamState, statusReducer } from "./status";
+import { initialStreamState, type StreamState, type StreamStatus, statusReducer } from "./status";
 
 interface LiveTimelineProps {
   seed: readonly Fingerprint[];

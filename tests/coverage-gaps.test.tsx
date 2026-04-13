@@ -816,7 +816,9 @@ describe("status.ts exhaustive check", () => {
   it("unknown action kind hits default branch and returns the action", async () => {
     const { statusReducer } = await import("@/features/timeline/status");
     // The default branch assigns to `never` and returns it; at runtime this is just the value
-    const result = statusReducer({ status: "live", failCount: 0 }, { kind: "bogus" } as unknown as { kind: "first-event" });
+    const result = statusReducer({ status: "live", failCount: 0 }, { kind: "bogus" } as unknown as {
+      kind: "first-event";
+    });
     // result is the `_never` variable which is the action itself
     expect(result).toBeTruthy();
   });
