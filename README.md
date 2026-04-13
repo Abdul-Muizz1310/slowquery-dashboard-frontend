@@ -11,7 +11,7 @@
 ![tailwind](https://img.shields.io/badge/Tailwind-v4-06b6d4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![zod](https://img.shields.io/badge/Zod-boundaries-3068b7?style=flat-square)
 ![biome](https://img.shields.io/badge/lint-Biome%202-60a5fa?style=flat-square)
-![tests](https://img.shields.io/badge/tests-124%20vitest-6e9f18?style=flat-square)
+![tests](https://img.shields.io/badge/tests-188%20vitest-6e9f18?style=flat-square)
 ![vercel](https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white)
 [![ci](https://github.com/Abdul-Muizz1310/slowquery-dashboard-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/Abdul-Muizz1310/slowquery-dashboard-frontend/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
@@ -54,7 +54,7 @@ The demo's punchline: click "apply suggestion" and watch the p95 timeline drop f
 - 🖥️ Terminal aesthetic — dark mode, monospace, grid backgrounds
 - 🎬 Chromeless `/demo` view for README gifs
 - 🛡️ Zod validation at every API boundary
-- ✅ 124 vitest tests across 20 test files — red-first TDD
+- ✅ 188 vitest tests across 20 test files — red-first TDD, 100% line coverage
 
 ---
 
@@ -147,7 +147,7 @@ src/
 | **Code viewer** | Monaco via `@monaco-editor/react` |
 | **Validation** | Zod at all backend/API boundaries |
 | **State** | Zustand (timeline store) |
-| **Testing** | Vitest 4 + Testing Library + jsdom (124 tests) · Playwright (E2E) |
+| **Testing** | Vitest 4 + Testing Library + jsdom (188 tests, 100% coverage) · Playwright (E2E) |
 | **Lint / Format** | Biome 2 |
 | **Package manager** | pnpm 10, Node 24 |
 | **Hosting** | Vercel Hobby, auto-deploy on push to main |
@@ -193,7 +193,8 @@ pnpm test:e2e                # Playwright chromium
 
 | Metric | Value |
 |---|---|
-| **Unit tests** | 124 tests across 20 files (Vitest + jsdom) |
+| **Unit tests** | 188 tests across 20 files (Vitest + jsdom) |
+| **Line coverage** | **100%** |
 | **E2E** | Playwright (chromium only) |
 | **Methodology** | Red-first spec-TDD. Every spec in `docs/specs/` with enumerated test cases before code ships. |
 
