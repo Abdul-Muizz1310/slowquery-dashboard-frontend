@@ -137,9 +137,7 @@ describe("fingerprints-table.tsx sort by p95_ms", () => {
 
   it("sorts by call_count", async () => {
     const { FingerprintsTable } = await import("@/features/fingerprints/fingerprints-table");
-    render(
-      <FingerprintsTable fingerprints={fingerprintsList} sort="call_count" order="desc" />,
-    );
+    render(<FingerprintsTable fingerprints={fingerprintsList} sort="call_count" order="desc" />);
     const rows = screen.getAllByRole("row");
     expect(rows.length).toBe(4);
   });
@@ -249,7 +247,12 @@ describe("sort-header.tsx onKeyDown", () => {
       <table>
         <thead>
           <tr>
-            <SortHeader field="p95_ms" currentSort="total_ms" currentOrder="desc" onChange={onChange}>
+            <SortHeader
+              field="p95_ms"
+              currentSort="total_ms"
+              currentOrder="desc"
+              onChange={onChange}
+            >
               p95
             </SortHeader>
           </tr>
@@ -268,7 +271,12 @@ describe("sort-header.tsx onKeyDown", () => {
       <table>
         <thead>
           <tr>
-            <SortHeader field="p95_ms" currentSort="total_ms" currentOrder="desc" onChange={onChange}>
+            <SortHeader
+              field="p95_ms"
+              currentSort="total_ms"
+              currentOrder="desc"
+              onChange={onChange}
+            >
               p95
             </SortHeader>
           </tr>
@@ -363,10 +371,7 @@ describe("plan-viewer.tsx uncovered branches", () => {
           fingerprint_id: "deadbeefdeadbeef",
           plan_json: {
             "Node Type": "Limit",
-            Plans: [
-              "not a plan node",
-              { "Node Type": "Sort", "Total Cost": 10 },
-            ] as unknown[],
+            Plans: ["not a plan node", { "Node Type": "Sort", "Total Cost": 10 }] as unknown[],
           },
           plan_text: "...",
           cost: null,
@@ -431,7 +436,11 @@ describe("suggestion-card.tsx uncovered", () => {
     const { SuggestionCard } = await import("@/features/query-detail/suggestion-card");
     // jsdom may not have clipboard; exercise the click path
     const originalClipboard = navigator.clipboard;
-    Object.defineProperty(navigator, "clipboard", { value: undefined, writable: true, configurable: true });
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
     render(
       <SuggestionCard
         suggestion={{
@@ -449,7 +458,11 @@ describe("suggestion-card.tsx uncovered", () => {
     const copyBtn = screen.getByRole("button", { name: /copy/i });
     // Should not throw
     copyBtn.click();
-    Object.defineProperty(navigator, "clipboard", { value: originalClipboard, writable: true, configurable: true });
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    });
   });
 
   it("CopyButton invokes clipboard.writeText when available", async () => {
@@ -557,9 +570,7 @@ describe("latency-chart.tsx uncovered", () => {
     const { LatencyChart } = await import("@/features/timeline/latency-chart");
     const longLabel = "A".repeat(50);
     render(
-      <LatencyChart
-        series={[{ id: "abc", label: longLabel, points: [{ t: 1, p95: 10 }] }]}
-      />,
+      <LatencyChart series={[{ id: "abc", label: longLabel, points: [{ t: 1, p95: 10 }] }]} />,
     );
     expect(screen.queryByText(/waiting for data/i)).toBeNull();
   });
@@ -766,9 +777,7 @@ describe("buffer.ts console.warn path", () => {
 describe("fingerprints-table.tsx sort by last_seen asc", () => {
   it("sorts by last_seen ascending", async () => {
     const { FingerprintsTable } = await import("@/features/fingerprints/fingerprints-table");
-    render(
-      <FingerprintsTable fingerprints={fingerprintsList} sort="last_seen" order="asc" />,
-    );
+    render(<FingerprintsTable fingerprints={fingerprintsList} sort="last_seen" order="asc" />);
     const rows = screen.getAllByRole("row");
     expect(rows.length).toBe(4);
   });
@@ -856,7 +865,9 @@ describe("client.ts timeout paths", () => {
     Object.defineProperty(fakeError, "cause", {
       value: new DOMException("timed out", "TimeoutError"),
     });
-    globalThis.fetch = () => { throw fakeError; };
+    globalThis.fetch = () => {
+      throw fakeError;
+    };
     try {
       await expect(apiClient.switchBranch("fast")).rejects.toBeInstanceOf(TimeoutError);
     } finally {
@@ -870,7 +881,11 @@ describe("client.ts timeout paths", () => {
         // Create a stream that errors during reading
         const stream = new ReadableStream<Uint8Array>({
           start(ctrl) {
-            ctrl.enqueue(new TextEncoder().encode('data: {"kind":"heartbeat","now":"2026-04-12T01:00:00.000Z"}\n\n'));
+            ctrl.enqueue(
+              new TextEncoder().encode(
+                'data: {"kind":"heartbeat","now":"2026-04-12T01:00:00.000Z"}\n\n',
+              ),
+            );
           },
           pull() {
             throw new TypeError("stream read error");

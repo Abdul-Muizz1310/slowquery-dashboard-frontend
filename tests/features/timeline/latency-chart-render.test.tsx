@@ -18,7 +18,17 @@ class MockResizeObserver {
       [
         {
           target,
-          contentRect: { width: 800, height: 320, top: 0, left: 0, bottom: 320, right: 800, x: 0, y: 0, toJSON: () => ({}) },
+          contentRect: {
+            width: 800,
+            height: 320,
+            top: 0,
+            left: 0,
+            bottom: 320,
+            right: 800,
+            x: 0,
+            y: 0,
+            toJSON: () => ({}),
+          },
           borderBoxSize: [{ blockSize: 320, inlineSize: 800 }],
           contentBoxSize: [{ blockSize: 320, inlineSize: 800 }],
           devicePixelContentBoxSize: [{ blockSize: 320, inlineSize: 800 }],
@@ -46,8 +56,14 @@ beforeEach(() => {
     toJSON: () => ({}),
   });
   // Stub offsetWidth/offsetHeight
-  Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get: () => 800 });
-  Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => 320 });
+  Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+    configurable: true,
+    get: () => 800,
+  });
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+    configurable: true,
+    get: () => 320,
+  });
 });
 
 afterEach(() => {
