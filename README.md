@@ -54,7 +54,7 @@ The demo's punchline: click "apply suggestion" and watch the p95 timeline drop f
 - 🖥️ Terminal aesthetic — dark mode, monospace, grid backgrounds
 - 🎬 Chromeless `/demo` view for README gifs
 - 🛡️ Zod validation at every API boundary
-- ✅ 188 vitest tests across 20 test files — red-first TDD, 100% line coverage
+- ✅ 188 vitest tests across 23 test files — red-first TDD, 89.58% line coverage
 
 ---
 
@@ -147,7 +147,7 @@ src/
 | **Code viewer** | Monaco via `@monaco-editor/react` |
 | **Validation** | Zod at all backend/API boundaries |
 | **State** | Zustand (timeline store) |
-| **Testing** | Vitest 4 + Testing Library + jsdom (188 tests, 100% coverage) · Playwright (E2E) |
+| **Testing** | Vitest 4 + Testing Library + jsdom (188 tests, 89.58% line coverage) · Playwright (E2E) |
 | **Lint / Format** | Biome 2 |
 | **Package manager** | pnpm 10, Node 24 |
 | **Hosting** | Vercel Hobby, auto-deploy on push to main |
@@ -193,8 +193,8 @@ pnpm test:e2e                # Playwright chromium
 
 | Metric | Value |
 |---|---|
-| **Unit tests** | 188 tests across 20 files (Vitest + jsdom) |
-| **Line coverage** | **100%** |
+| **Unit tests** | 188 tests across 23 files (Vitest + jsdom) |
+| **Line coverage** | **89.58%** |
 | **E2E** | Playwright (chromium only) |
 | **Methodology** | Red-first spec-TDD. Every spec in `docs/specs/` with enumerated test cases before code ships. |
 
@@ -204,7 +204,7 @@ pnpm test:e2e                # Playwright chromium
 
 | Principle | How it shows up |
 |---|---|
-| 🧪 **Spec-TDD** | Every feature has a spec in `docs/specs/` with enumerated test cases before code ships. 124 tests all green. |
+| 🧪 **Spec-TDD** | Every feature has a spec in `docs/specs/` with enumerated test cases before code ships. 188 tests all green. |
 | 🛡️ **Negative-space programming** | Zod parse at every boundary, discriminated unions for suggestion kinds, `Literal` types for branch targets. |
 | 🏗️ **Separation of concerns** | `app/` thin routes · `components/` dumb presentational · `lib/` owns side effects. |
 | 🔤 **Typed everything** | TypeScript 5 strict, no `any`. Zod-inferred types flow end-to-end. |
