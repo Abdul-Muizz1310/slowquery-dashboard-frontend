@@ -1,7 +1,7 @@
 # 📊 `slowquery-dashboard-frontend`
 
 > 🖥️ **Next.js 16 terminal-styled dashboard for the slowquery-detective pipeline.**
-> Live fingerprints table, EXPLAIN viewer with Monaco, p95 timeline via SSE, and one-click branch switch that drops latency from 1200ms to 18ms.
+> Live fingerprints table, EXPLAIN viewer with Monaco, p95 timeline via SSE, and a one-click branch switch whose live p95 drop is the headline (illustratively 1200ms → 18ms on the full seed — see the figure note below).
 
 🌐 [Live Dashboard](https://slowquery-dashboard-frontend.vercel.app) · 🔙 [Backend API](https://slowquery-demo-backend.onrender.com) · 🔙 [Backend Repo](https://github.com/Abdul-Muizz1310/slowquery-demo-backend) · 📦 [slowquery-detective](https://pypi.org/project/slowquery-detective/) · 📐 [Specs](docs/specs/)
 
@@ -30,7 +30,7 @@ $ pnpm dev
                suggestion: CREATE INDEX ix_orders_created_at
 [/timeline]  SSE connected · 7 series · p95 updating live
 [apply]      POST /branches/switch → fast branch
-[timeline]   p95 re-rendering · 1200ms → 18ms ✓
+[timeline]   p95 re-rendering · large drop on full seed (illustrative)
 ```
 
 ---
@@ -39,7 +39,9 @@ $ pnpm dev
 
 Phase 4c of the [slowquery-detective](https://pypi.org/project/slowquery-detective/) portfolio project. The PyPI middleware captures slow queries; the [demo backend](https://github.com/Abdul-Muizz1310/slowquery-demo-backend) runs them against seeded commerce data on Neon; **this dashboard** makes the pipeline visible and interactive.
 
-The demo's punchline: click "apply suggestion" and watch the p95 timeline drop from **1200ms to 18ms** in real time — that's the difference between a missing index and an indexed column on 100k rows.
+The demo's punchline: click "apply suggestion" and watch the live p95 timeline drop after the branch switch — a missing index becoming an index scan, rendered in real time from the backend's SSE stream.
+
+> **About the “1200ms → 18ms” figure.** It is the *illustrative* drop the demo is designed around, not a number measured at the shipped seed. The real delta is seed-dependent: dramatic on the full 1M-order seed (sequential scan → index scan), but modest on the shipped 100k-order seed, where Postgres already picks a cheap Bitmap Heap Scan even without the ideal index. The timeline hard-codes no number — it renders whatever live p95 the backend emits. Measure your own figures with the backend's [`benchmarks/bench_demo_latency.py`](https://github.com/Abdul-Muizz1310/slowquery-demo-backend/blob/main/benchmarks/bench_demo_latency.py); see its [`DEVIATIONS.md`](https://github.com/Abdul-Muizz1310/slowquery-demo-backend/blob/main/docs/DEVIATIONS.md) §1 and §4.
 
 ---
 
@@ -50,7 +52,7 @@ The demo's punchline: click "apply suggestion" and watch the p95 timeline drop f
 - 📊 EXPLAIN plan JSON with postgres-plan highlighter
 - 💡 Suggestion cards — rule-sourced first, LLM fallback second
 - 📈 Live p95 line chart per fingerprint via Server-Sent Events
-- 🔀 One-click branch switch: slow → fast Neon branch (1200ms → 18ms)
+- 🔀 One-click branch switch: slow → fast Neon branch (live p95 drop; 1200ms → 18ms illustrative, full seed)
 - 🖥️ Terminal aesthetic — dark mode, monospace, grid backgrounds
 - 🎬 Chromeless `/demo` view for README gifs
 - 🛡️ Zod validation at every API boundary
@@ -83,7 +85,7 @@ sequenceDiagram
     API->>Neon: reconnect → slowquery-fast branch
     API-->>Dashboard: 200 OK {branch: "fast"}
     Dashboard->>Dashboard: timeline re-renders
-    Note over Dashboard: p95 drops 1200ms → 18ms
+    Note over Dashboard: live p95 drops (1200ms → 18ms illustrative, full seed)
 ```
 
 ### 📡 SSE timeline data flow

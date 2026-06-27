@@ -2,7 +2,7 @@
 
 ## Goal
 
-One route, one page, no nav chrome, fixed viewport, composed from the building blocks of specs 01 / 03 / 04 — a compact fingerprints panel on the left, the live timeline on the right, the branch indicator + apply button top-center. Designed to be recorded by [ScreenToGif](https://www.screentogif.com/) at `1280×720` producing the single gif the spec's "1200ms → 18ms live drop" money shot lands as. This page exists so the README's demo gif is reproducible on any machine — not a custom component, just a composition.
+One route, one page, no nav chrome, fixed viewport, composed from the building blocks of specs 01 / 03 / 04 — a compact fingerprints panel on the left, the live timeline on the right, the branch indicator + apply button top-center. Designed to be recorded by [ScreenToGif](https://www.screentogif.com/) at `1280×720` producing the single gif the spec's live-p95-drop money shot lands as (the "1200ms → 18ms" figure is illustrative of a full-scale seed; the shipped 100k seed shows a smaller drop — see the backend's `DEVIATIONS.md` §4). This page exists so the README's demo gif is reproducible on any machine — not a custom component, just a composition.
 
 ## Route
 

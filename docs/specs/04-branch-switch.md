@@ -2,7 +2,7 @@
 
 ## Goal
 
-Give the user one button that POSTs `{target: "fast"}` to `/branches/switch`, surfaces the live latency of the switch in a toast, flips the client-side "active branch" indicator, and cues `<LiveTimeline>` to place a `<BranchMarker>` at the server-reported `switched_at` so the before/after is visible on the chart. This is the "1200ms → 18ms drop" moment the whole Phase 4 story is built around. The button lives both in `<SuggestionCard kind="index">` (spec 02) and as a standalone toggle on `/demo` (spec 05).
+Give the user one button that POSTs `{target: "fast"}` to `/branches/switch`, surfaces the live latency of the switch in a toast, flips the client-side "active branch" indicator, and cues `<LiveTimeline>` to place a `<BranchMarker>` at the server-reported `switched_at` so the before/after is visible on the chart. This is the live-p95-drop moment the whole Phase 4 story is built around (the "1200ms → 18ms" figure is the illustrative drop on a full-scale seed; the shipped 100k seed shows a more modest delta — see the backend's `DEVIATIONS.md` §4). The button lives both in `<SuggestionCard kind="index">` (spec 02) and as a standalone toggle on `/demo` (spec 05).
 
 ## Inputs
 

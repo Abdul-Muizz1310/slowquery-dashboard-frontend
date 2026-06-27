@@ -8,8 +8,14 @@ flowchart LR
     B --> C[Drill Into Detail<br>SQL + EXPLAIN plan]
     C --> D[Read Suggestion<br>CREATE INDEX]
     D --> E[Apply on Fast Branch<br>one click]
-    E --> F[Watch Timeline<br>1200ms -> 18ms]
+    E --> F[Watch Timeline<br>live p95 drop]
 ```
+
+> **On the “1200ms → 18ms” number:** that is the *illustrative* drop on the full
+> 1M-order seed. The live demo runs against the shipped 100k-order seed, where the
+> drop is real but more modest (Postgres already uses a cheap Bitmap Heap Scan at
+> 100k — see the backend's [`DEVIATIONS.md`](https://github.com/Abdul-Muizz1310/slowquery-demo-backend/blob/main/docs/DEVIATIONS.md) §4). Demo the *interaction and the live
+> drop*, not a specific figure, unless you have seeded a full-scale branch.
 
 ## Prerequisites
 
@@ -36,7 +42,7 @@ flowchart LR
 ### 1. Fingerprints table (30s)
 
 1. The landing page (`/`) shows a table of query fingerprints sorted by p95 latency
-2. Point out the top row: an `ORDER BY created_at DESC` query with p95 around 1200ms
+2. Point out the top row: an `ORDER BY created_at DESC` query with an elevated p95 (the exact figure is seed-dependent — see the note above)
 3. Note the red `sort_without_index` badge — this is a rule-based detection, not an LLM guess
 4. Click the column headers to re-sort by total time, call count, or p95
 
@@ -60,8 +66,8 @@ flowchart LR
 1. Navigate to `/timeline`
 2. The live SSE chart shows latency over time via Recharts
 3. A vertical branch marker appears where the switch happened
-4. Within the next few data points, p95 drops from ~1200ms to ~18ms
-5. This is the money shot — the fix worked, the dashboard detected it, all in real time
+4. Within the next few data points, p95 drops — sharply on a full-scale seed, more modestly on the shipped 100k seed
+5. This is the money shot — the fix worked, the dashboard detected it, all in real time (demo the live drop, not a fixed number)
 
 ### 5. Explore the demo page (30s)
 

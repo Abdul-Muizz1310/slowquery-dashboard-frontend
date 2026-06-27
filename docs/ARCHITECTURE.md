@@ -91,7 +91,7 @@ sequenceDiagram
     API-->>Btn: 200 OK
     Btn->>Store: setBranch("fast")
     Store->>TL: Branch marker injected
-    Note over TL: p95 drops from ~1200ms to ~18ms<br>within next SSE batch
+    Note over TL: live p95 drops within next SSE batch<br>(1200ms → 18ms illustrative, full seed)
 ```
 
 ## Feature module structure
