@@ -12,7 +12,8 @@ export default defineConfig({
     testTimeout: 30_000,
     coverage: {
       provider: "v8",
-      all: true,
+      // `all` is the default in Vitest 4 (uncovered `include` files are
+      // reported) and is no longer a valid explicit option, so it is omitted.
       include: ["src/**"],
       thresholds: { lines: 80, statements: 80, functions: 80, branches: 70 },
     },

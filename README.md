@@ -1,7 +1,7 @@
 # 📊 `slowquery-dashboard-frontend`
 
 > 🖥️ **Next.js 16 terminal-styled dashboard for the slowquery-detective pipeline.**
-> Live fingerprints table, EXPLAIN viewer with Monaco, p95 timeline via SSE, and a one-click branch switch whose live p95 drop is the headline (illustratively 1200ms → 18ms on the full seed — see the figure note below).
+> Live fingerprints table with rule badges, EXPLAIN viewer, canonical-SQL panel, p95 timeline via SSE, and a one-click branch switch whose live p95 drop is the headline (illustratively 1200ms → 18ms on the full seed — see the figure note below).
 
 🌐 [Live Dashboard](https://slowquery-dashboard-frontend.vercel.app) · 🔙 [Backend API](https://slowquery-demo-backend.onrender.com) · 🔙 [Backend Repo](https://github.com/Abdul-Muizz1310/slowquery-demo-backend) · 📦 [slowquery-detective](https://pypi.org/project/slowquery-detective/) · 📐 [Specs](docs/specs/)
 
@@ -11,7 +11,7 @@
 ![tailwind](https://img.shields.io/badge/Tailwind-v4-06b6d4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![zod](https://img.shields.io/badge/Zod-boundaries-3068b7?style=flat-square)
 ![biome](https://img.shields.io/badge/lint-Biome%202-60a5fa?style=flat-square)
-![tests](https://img.shields.io/badge/tests-188%20vitest-6e9f18?style=flat-square)
+![tests](https://img.shields.io/badge/tests-193%20vitest-6e9f18?style=flat-square)
 ![vercel](https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white)
 [![ci](https://github.com/Abdul-Muizz1310/slowquery-dashboard-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/Abdul-Muizz1310/slowquery-dashboard-frontend/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
@@ -24,12 +24,12 @@ $ pnpm dev
   - Local:   http://localhost:3000
   - Backend: https://slowquery-demo-backend.onrender.com
 
-[/]          7 fingerprints loaded · sorted by total_ms desc
-[/queries/c168] Monaco: SELECT … ORDER BY created_at DESC
+[/]          7 fingerprints loaded · sorted by total_ms desc · rule badges
+[/queries/c168] canonical_sql: SELECT … ORDER BY created_at DESC
                EXPLAIN: Seq Scan on orders · cost 14209 · rows 100000
-               suggestion: CREATE INDEX ix_orders_created_at
+               suggestion: CREATE INDEX ix_orders_created_at  [Apply on fast branch]
 [/timeline]  SSE connected · 7 series · p95 updating live
-[apply]      POST /branches/switch → fast branch
+[apply]      POST /branches/switch → fast branch · marker on chart
 [timeline]   p95 re-rendering · large drop on full seed (illustrative)
 ```
 
@@ -48,7 +48,7 @@ The demo's punchline: click "apply suggestion" and watch the live p95 timeline d
 ## ✨ Features
 
 - 📋 Fingerprints table sorted by `total_ms` desc with p50/p95/p99, call counts, and rule badges
-- 🔍 Single-fingerprint detail with canonical SQL in Monaco editor
+- 🔍 Single-fingerprint detail with the canonical SQL rendered in a read-only `<pre>` panel
 - 📊 EXPLAIN plan JSON with postgres-plan highlighter
 - 💡 Suggestion cards — rule-sourced first, LLM fallback second
 - 📈 Live p95 line chart per fingerprint via Server-Sent Events
@@ -56,7 +56,7 @@ The demo's punchline: click "apply suggestion" and watch the live p95 timeline d
 - 🖥️ Terminal aesthetic — dark mode, monospace, grid backgrounds
 - 🎬 Chromeless `/demo` view for README gifs
 - 🛡️ Zod validation at every API boundary
-- ✅ 188 vitest tests across 23 test files — red-first TDD, 89.58% line coverage
+- ✅ 193 vitest tests across 24 test files (incl. composed-path integration tests) — red-first TDD, 88.4% line coverage
 
 ---
 
@@ -114,7 +114,7 @@ src/
 │       └── page.tsx             # Chromeless demo view
 ├── components/
 │   ├── FingerprintsTable.tsx    # Sortable table with rule badges
-│   ├── QueryDetail.tsx          # Monaco + EXPLAIN + suggestions
+│   ├── QueryDetail.tsx          # canonical SQL + EXPLAIN + suggestions
 │   ├── TimelineChart.tsx        # Recharts p95 line chart
 │   ├── BranchSwitch.tsx         # Slow ↔ fast toggle
 │   └── SuggestionCard.tsx       # Rule / LLM suggestion display
@@ -132,7 +132,7 @@ src/
 | Route | Purpose |
 |---|---|
 | `/` | 📋 Fingerprints table — sorted by `total_ms` desc, rule badges, p50/p95/p99 |
-| `/queries/[id]` | 🔍 Detail — Monaco SQL, EXPLAIN JSON, suggestion cards |
+| `/queries/[id]` | 🔍 Detail — canonical SQL, EXPLAIN JSON, suggestion cards with a working Apply-on-fast-branch button |
 | `/timeline` | 📈 Live p95 line chart per fingerprint via SSE |
 | `/demo` | 🎬 Chromeless view — fingerprints + timeline + branch switch |
 
@@ -146,10 +146,10 @@ src/
 | **UI** | React 19 · TypeScript 5 strict |
 | **Styling** | Tailwind CSS v4 via `@tailwindcss/postcss` |
 | **Charts** | Recharts |
-| **Code viewer** | Monaco via `@monaco-editor/react` |
+| **Code viewer** | Read-only `<pre>` (no editor dependency — keeps the detail page light) |
 | **Validation** | Zod at all backend/API boundaries |
 | **State** | Zustand (timeline store) |
-| **Testing** | Vitest 4 + Testing Library + jsdom (188 tests, 89.58% line coverage) · Playwright (E2E) |
+| **Testing** | Vitest 4 + Testing Library + jsdom (193 tests, 88.4% line coverage) · Playwright (E2E) |
 | **Lint / Format** | Biome 2 |
 | **Package manager** | pnpm 10, Node 24 |
 | **Hosting** | Vercel Hobby, auto-deploy on push to main |
@@ -195,8 +195,8 @@ pnpm test:e2e                # Playwright chromium
 
 | Metric | Value |
 |---|---|
-| **Unit tests** | 188 tests across 23 files (Vitest + jsdom) |
-| **Line coverage** | **89.58%** |
+| **Unit tests** | 193 tests across 24 files (Vitest + jsdom) |
+| **Line coverage** | **88.4%** |
 | **E2E** | Playwright (chromium only) |
 | **Methodology** | Red-first spec-TDD. Every spec in `docs/specs/` with enumerated test cases before code ships. |
 
@@ -206,7 +206,7 @@ pnpm test:e2e                # Playwright chromium
 
 | Principle | How it shows up |
 |---|---|
-| 🧪 **Spec-TDD** | Every feature has a spec in `docs/specs/` with enumerated test cases before code ships. 188 tests all green. |
+| 🧪 **Spec-TDD** | Every feature has a spec in `docs/specs/` with enumerated test cases before code ships. 193 tests all green. |
 | 🛡️ **Negative-space programming** | Zod parse at every boundary, discriminated unions for suggestion kinds, `Literal` types for branch targets. |
 | 🏗️ **Separation of concerns** | `app/` thin routes · `components/` dumb presentational · `lib/` owns side effects. |
 | 🔤 **Typed everything** | TypeScript 5 strict, no `any`. Zod-inferred types flow end-to-end. |

@@ -1,5 +1,11 @@
 /**
- * Coverage-gap tests. Exercises every uncovered line identified by v8.
+ * Branch / edge-case tests for pure helpers and small components.
+ *
+ * These assert real behaviours (error mapping, formatter branches, null
+ * handling, exhaustive switches). The end-to-end wiring the earlier audit
+ * flagged — Apply-on-fast-branch, reconnect/polling, branch markers, rule
+ * badges, the X-axis timestamp — is driven by tests/integration/*.test.tsx
+ * against the composed paths, not by exercising exported functions here.
  */
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -290,15 +296,15 @@ describe("sort-header.tsx onKeyDown", () => {
 });
 
 /* ------------------------------------------------------------------ */
-/* canonical-sql.tsx — line 34: Monaco dynamic import inner Wrapped   */
+/* canonical-sql.tsx — visible <pre> is the only SQL surface (OPT-1)  */
 /* ------------------------------------------------------------------ */
-describe("canonical-sql.tsx Monaco wrapper", () => {
-  it("renders CanonicalSql with the hidden Monaco wrapper div", async () => {
+describe("canonical-sql.tsx", () => {
+  it("renders the SQL in a visible <pre> and mounts no hidden editor", async () => {
     const { CanonicalSql } = await import("@/features/query-detail/canonical-sql");
     const { container } = render(<CanonicalSql sql="SELECT 1" />);
-    // The <pre> is always visible; the hidden div wraps the Monaco lazy load
     expect(container.querySelector("pre")?.textContent).toContain("SELECT 1");
-    expect(container.querySelector(".hidden")).not.toBeNull();
+    // The permanently-hidden Monaco div was removed in OPT-1.
+    expect(container.querySelector(".hidden")).toBeNull();
   });
 });
 
@@ -541,7 +547,7 @@ describe("latency-chart.tsx uncovered", () => {
 
   it("LatencyChart with series containing points does not show empty state", async () => {
     const { LatencyChart } = await import("@/features/timeline/latency-chart");
-    const { container } = render(
+    render(
       <LatencyChart
         series={[
           {
@@ -622,7 +628,6 @@ describe("handlers.ts uncovered paths", () => {
   });
 
   it("POST /branches/switch with invalid target returns 422", async () => {
-    const { HttpError } = await import("@/lib/api/errors");
     const res = await fetch(`${API}/branches/switch`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -632,7 +637,6 @@ describe("handlers.ts uncovered paths", () => {
   });
 
   it("POST /branches/switch with target=slow succeeds", async () => {
-    const { apiClient } = await import("@/lib/api/client");
     const { useBranchStore } = await import("@/features/branches/use-branch-store");
     useBranchStore.getState().reset();
     useBranchStore.getState().hydrate("fast");
@@ -753,7 +757,7 @@ describe("buffer.ts console.warn path", () => {
   it("malformed event logs warning and returns buf unchanged", async () => {
     const { applyEvent } = await import("@/features/timeline/buffer");
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    const buf = { byId: new Map<string, number[]>() };
+    const buf = { byId: new Map() };
     const result = applyEvent(buf, "totally invalid");
     expect(result.byId.size).toBe(0);
     expect(warn).toHaveBeenCalledWith("[timeline] dropped malformed stream event");
@@ -762,7 +766,7 @@ describe("buffer.ts console.warn path", () => {
 
   it("heartbeat event is a no-op (kind !== tick)", async () => {
     const { applyEvent } = await import("@/features/timeline/buffer");
-    const buf = { byId: new Map<string, number[]>() };
+    const buf = { byId: new Map() };
     const result = applyEvent(buf, {
       kind: "heartbeat",
       now: "2026-04-12T01:00:00.000Z",

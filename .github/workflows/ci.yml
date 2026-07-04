@@ -48,3 +48,23 @@ jobs:
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+
+  e2e:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_API_URL: https://slowquery-demo-backend.onrender.com
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      # playwright.config.ts starts `pnpm dev` and waits for it; the E2E
+      # specs (branch-switch, timeline, fingerprints, query-detail, demo)
+      # drive the real composed pages CI otherwise never exercises.
+      - run: pnpm test:e2e

@@ -23,7 +23,7 @@ describe("AppNav", () => {
 
   it("highlights the active link with the flame accent class", async () => {
     const { AppNav } = await import("@/components/terminal/AppNav");
-    const { container } = render(<AppNav active="demo" />);
+    render(<AppNav active="demo" />);
     const demoLink = screen.getByText("demo");
     expect(demoLink.className).toMatch(/text-foreground/);
     // Other links should not have the active class
