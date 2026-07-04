@@ -1,55 +1,14 @@
 /**
  * Spec 02 — CanonicalSql viewer.
  *
- * Marked "use client" because next/dynamic with `ssr: false` is only
- * allowed in client components in Next 16. The SSR pass still walks
- * client components and emits their HTML, so the <pre> fallback still
- * appears in the server-rendered markup before Monaco hydrates.
- *
- * The MONACO_OPTIONS export is consumed by the security test that
- * pins readOnly: true.
+ * Renders the canonical SQL as a plain, server-rendered <pre>. This is a
+ * read-only display of a short SQL string, so it deliberately does NOT pull
+ * in a full code editor: the Monaco editor previously mounted here lived in
+ * a permanently `display:none` div (never visible) yet still shipped a
+ * multi-MB client chunk and a runtime CDN fetch on every detail-page visit
+ * (audit OPT-1). If richer highlighting is wanted later, use a tiny
+ * build-time highlighter (prism/shiki) rendered visibly — not an editor.
  */
-
-"use client";
-
-import dynamic from "next/dynamic";
-
-export const MONACO_OPTIONS: Readonly<{
-  readOnly: boolean;
-  minimap: { enabled: boolean };
-  scrollBeyondLastLine: boolean;
-  fontSize: number;
-}> = Object.freeze({
-  readOnly: true,
-  minimap: { enabled: false },
-  scrollBeyondLastLine: false,
-  fontSize: 13,
-});
-
-const MonacoEditor = dynamic(
-  () =>
-    import("@monaco-editor/react").then((mod) => {
-      const Editor = mod.Editor;
-      /* v8 ignore next 7 -- Monaco loads client-side only; untestable in jsdom */
-      function Wrapped({ sql }: { sql: string }) {
-        return (
-          <Editor
-            value={sql}
-            language="sql"
-            options={MONACO_OPTIONS}
-            height="240px"
-            theme="vs-dark"
-          />
-        );
-      }
-      Wrapped.displayName = "MonacoSqlEditor";
-      return Wrapped;
-    }),
-  {
-    ssr: false,
-    loading: () => null,
-  },
-);
 
 interface CanonicalSqlProps {
   sql: string;
@@ -61,11 +20,6 @@ export function CanonicalSql({ sql }: CanonicalSqlProps) {
       <pre className="m-0 p-3 font-mono text-xs text-foreground whitespace-pre overflow-x-auto">
         {sql}
       </pre>
-      <div className="hidden">
-        {/* Monaco hydrates over the <pre> after mount; the loading
-            fallback is null so the <pre> stays visible. */}
-        <MonacoEditor sql={sql} />
-      </div>
     </div>
   );
 }

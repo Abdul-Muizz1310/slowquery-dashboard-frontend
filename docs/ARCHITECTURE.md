@@ -113,4 +113,4 @@ Features import from `src/lib/` but never from each other. The `lib/api/` layer 
 3. **Discriminated suggestions** — query optimization suggestions carry a `kind` field (`rule_based | llm_fallback`) so the UI can distinguish deterministic rule matches from LLM-generated advice.
 4. **SSE reconnection** — the SSE hook uses exponential backoff with jitter. It never silently drops the connection; the StatusBar reflects connection state.
 5. **Branch state is global** — the active Neon branch lives in a Zustand store so the timeline, fingerprints table, and apply button stay in sync without prop drilling.
-6. **Server Components by default** — only components that need browser APIs (EventSource, Zustand, Monaco) are marked `"use client"`. Pages fetch data server-side.
+6. **Server Components by default** — only components that need browser APIs or client state (SSE `fetch`/`ReadableStream`, the Zustand branch store, the router-driven Top-N island) are marked `"use client"`. Pages fetch data server-side; the canonical SQL is a plain server-rendered `<pre>` (no editor dependency).
