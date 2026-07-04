@@ -3,12 +3,45 @@
  * Cases 1, 2, 4, 7, 11, 12, 20.
  */
 
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 afterEach(cleanup);
 
 describe("spec 02 — SuggestionCard", () => {
+  it("case 1b integration: clicking Apply on fast branch drives the branch switch", async () => {
+    // Regression for the audit's top finding: the kind=index card's Apply
+    // button used to be an inert <button> with no onClick. It must now be the
+    // store-wired <ApplyOnFastBranchButton> that actually POSTs the switch.
+    const { SuggestionCard } = await import("@/features/query-detail/suggestion-card");
+    const { useBranchStore } = await import("@/features/branches/use-branch-store");
+    const { apiClient } = await import("@/lib/api/client");
+    useBranchStore.getState().reset();
+    const switchSpy = vi.spyOn(apiClient, "switchBranch");
+    try {
+      render(
+        <SuggestionCard
+          suggestion={{
+            id: 1,
+            fingerprint_id: "deadbeefdeadbeef",
+            kind: "index",
+            source: "rules",
+            rule: "sort_without_index",
+            sql: "CREATE INDEX ix_foo ON foo(bar);",
+            rationale: "sort is expensive",
+            applied_at: null,
+          }}
+        />,
+      );
+      screen.getByRole("button", { name: /apply on fast/i }).click();
+      await waitFor(() => expect(switchSpy).toHaveBeenCalledWith("fast"));
+      await waitFor(() => expect(useBranchStore.getState().activeBranch).toBe("fast"));
+    } finally {
+      switchSpy.mockRestore();
+      useBranchStore.getState().reset();
+    }
+  });
+
   it("case 1 happy: kind=index renders DDL + Copy button + Apply button", async () => {
     const { SuggestionCard } = await import("@/features/query-detail/suggestion-card");
     render(

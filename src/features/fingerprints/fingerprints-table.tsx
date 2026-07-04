@@ -106,7 +106,7 @@ export function FingerprintsTable({
       </thead>
       <tbody>
         {limited.map((fp) => {
-          const suggestions = suggestionsByFingerprint?.[fp.id] ?? [];
+          const suggestions = suggestionsByFingerprint?.[fp.id] ?? fp.suggestions ?? [];
           return (
             <tr
               key={fp.id}

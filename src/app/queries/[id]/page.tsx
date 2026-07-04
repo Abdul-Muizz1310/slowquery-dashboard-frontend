@@ -91,8 +91,9 @@ export default async function Page({ params }: PageProps) {
           </a>
           <h1 className="mt-2 font-mono text-sm text-foreground">{result.fingerprint.id}</h1>
           <p className="font-mono text-xs text-fg-muted">
-            calls {result.fingerprint.call_count} · p50 {String(result.fingerprint.p50_ms)}ms · p95{" "}
-            {String(result.fingerprint.p95_ms)}ms · p99 {String(result.fingerprint.p99_ms)}ms
+            calls {result.fingerprint.call_count} · p50 {String(result.fingerprint.p50_ms ?? "—")}ms
+            · p95 {String(result.fingerprint.p95_ms ?? "—")}ms · p99{" "}
+            {String(result.fingerprint.p99_ms ?? "—")}ms
           </p>
         </div>
 

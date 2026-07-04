@@ -20,20 +20,6 @@ export type BranchName = z.infer<typeof BranchNameSchema>;
 const NumericNullable = z.union([z.number(), z.null()]);
 const TimestampString = z.string().min(1);
 
-export const FingerprintSchema = z.object({
-  id: z.string().min(1),
-  fingerprint: z.string(),
-  first_seen: TimestampString,
-  last_seen: TimestampString,
-  call_count: z.number().int().nonnegative(),
-  total_ms: z.number().int().nonnegative(),
-  p50_ms: NumericNullable,
-  p95_ms: NumericNullable,
-  p99_ms: NumericNullable,
-  max_ms: NumericNullable,
-});
-export type Fingerprint = z.infer<typeof FingerprintSchema>;
-
 export const SuggestionKindSchema = z.enum(["index", "rewrite", "denormalize", "partition"]);
 export type SuggestionKind = z.infer<typeof SuggestionKindSchema>;
 
@@ -51,6 +37,25 @@ export const SuggestionSchema = z.object({
   applied_at: TimestampString.nullable(),
 });
 export type Suggestion = z.infer<typeof SuggestionSchema>;
+
+export const FingerprintSchema = z.object({
+  id: z.string().min(1),
+  fingerprint: z.string(),
+  first_seen: TimestampString,
+  last_seen: TimestampString,
+  call_count: z.number().int().nonnegative(),
+  total_ms: z.number().int().nonnegative(),
+  p50_ms: NumericNullable,
+  p95_ms: NumericNullable,
+  p99_ms: NumericNullable,
+  max_ms: NumericNullable,
+  // The list endpoint (GET /_slowquery/queries) embeds each fingerprint's
+  // rule/LLM suggestions so the landing table can render rule badges without
+  // an N+1 fetch. Optional so detail-only fixtures and older payloads parse;
+  // readonly because the table only ever reads them.
+  suggestions: z.array(SuggestionSchema).readonly().optional(),
+});
+export type Fingerprint = z.infer<typeof FingerprintSchema>;
 
 export const ExplainPlanSchema = z.object({
   fingerprint_id: z.string().min(1),

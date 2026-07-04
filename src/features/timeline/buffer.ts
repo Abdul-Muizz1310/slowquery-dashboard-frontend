@@ -9,13 +9,25 @@
  * chart state).
  */
 
+import type { Fingerprint } from "@/lib/api/schemas";
 import { type StreamEvent, StreamEventSchema } from "@/lib/api/schemas";
 
 const MAX_POINTS = 60;
 const HEX_ID = /^[a-f0-9]{16}$/;
 
+/**
+ * One sample on a fingerprint's p95 line. `t` is a real Unix-ms timestamp
+ * (the event's `sampled_at`, or receipt time for poll samples) so the
+ * chart X-axis can render an accurate "Ns ago" label — never an array
+ * index masquerading as an epoch value.
+ */
+export interface TimePoint {
+  t: number;
+  p95: number;
+}
+
 export interface Buffer {
-  byId: Map<string, number[]>;
+  byId: Map<string, TimePoint[]>;
 }
 
 interface BufferWithGreyed extends Buffer {
@@ -23,7 +35,20 @@ interface BufferWithGreyed extends Buffer {
   greyedAt: Map<string, number>;
 }
 
-export function applyEvent(buf: Buffer, ev: unknown): Buffer {
+function pushCapped(existing: readonly TimePoint[], point: TimePoint): TimePoint[] {
+  const series = [...existing, point];
+  if (series.length > MAX_POINTS) {
+    series.splice(0, series.length - MAX_POINTS);
+  }
+  return series;
+}
+
+function toTimestamp(iso: string, fallbackMs: number): number {
+  const parsed = Date.parse(iso);
+  return Number.isFinite(parsed) ? parsed : fallbackMs;
+}
+
+export function applyEvent(buf: Buffer, ev: unknown, nowMs: number = Date.now()): Buffer {
   const parsed = StreamEventSchema.safeParse(ev);
   if (!parsed.success) {
     if (typeof console !== "undefined") {
@@ -36,11 +61,26 @@ export function applyEvent(buf: Buffer, ev: unknown): Buffer {
   if (!HEX_ID.test(event.fingerprint_id)) return buf;
   if (!Number.isFinite(event.p95_ms)) return buf;
   const next = new Map(buf.byId);
-  const series = [...(next.get(event.fingerprint_id) ?? []), event.p95_ms];
-  if (series.length > MAX_POINTS) {
-    series.splice(0, series.length - MAX_POINTS);
+  const point: TimePoint = { t: toTimestamp(event.sampled_at, nowMs), p95: event.p95_ms };
+  next.set(event.fingerprint_id, pushCapped(next.get(event.fingerprint_id) ?? [], point));
+  return { byId: next };
+}
+
+/**
+ * Polling fallback (spec 03 invariant 3): fold a freshly polled fingerprint
+ * list into the buffer, appending the current p95 for each line at `nowMs`.
+ * Fingerprints with a null p95 (percentiles not yet computed) are skipped.
+ */
+export function appendPollSamples(
+  buf: Buffer,
+  fingerprints: readonly Fingerprint[],
+  nowMs: number = Date.now(),
+): Buffer {
+  const next = new Map(buf.byId);
+  for (const fp of fingerprints) {
+    if (fp.p95_ms === null || !Number.isFinite(fp.p95_ms)) continue;
+    next.set(fp.id, pushCapped(next.get(fp.id) ?? [], { t: nowMs, p95: fp.p95_ms }));
   }
-  next.set(event.fingerprint_id, series);
   return { byId: next };
 }
 

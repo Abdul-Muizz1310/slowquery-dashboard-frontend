@@ -9,13 +9,14 @@
  * forces every callsite to handle it.
  *
  * The Apply on fast branch button only renders for kind === "index".
- * It dynamically imports the spec 04 ApplyOnFastBranchButton at use
- * time so the button doesn't pull the zustand store + branch service
- * into pages that don't need them.
+ * It reuses the spec 04 <ApplyOnFastBranchButton>, which is the single
+ * store-wired owner of the branch switch (spec 04 invariant 1) — this
+ * card must never POST to /branches/switch on its own.
  */
 
 "use client";
 
+import { ApplyOnFastBranchButton } from "@/features/branches/apply-button";
 import type { Suggestion } from "@/lib/api/schemas";
 
 interface SuggestionCardProps {
@@ -38,7 +39,7 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
-function AppliedBadge({ at }: { at: string }) {
+function AppliedBadge() {
   return (
     <span className="text-xs px-2 py-1 rounded bg-success/10 text-success border border-success/30 font-mono">
       Applied
@@ -56,7 +57,7 @@ export function SuggestionCard({ suggestion }: SuggestionCardProps) {
             <span className="text-xs uppercase text-fg-faint font-mono">
               {suggestion.source} · {suggestion.rule ?? "index"}
             </span>
-            {isApplied && <AppliedBadge at={suggestion.applied_at as string} />}
+            {isApplied && <AppliedBadge />}
           </div>
           <pre className="m-0 p-2 font-mono text-xs bg-surface/50 rounded border border-border overflow-x-auto">
             {suggestion.sql ?? ""}
@@ -64,13 +65,7 @@ export function SuggestionCard({ suggestion }: SuggestionCardProps) {
           <p className="mt-2 text-sm text-fg-muted font-mono">{suggestion.rationale}</p>
           <div className="mt-3 flex gap-2">
             {suggestion.sql && <CopyButton value={suggestion.sql} />}
-            <button
-              type="button"
-              disabled={isApplied}
-              className="text-xs px-2 py-1 rounded border border-accent-flame/30 bg-accent-flame/10 text-accent-flame hover:bg-accent-flame/20 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
-            >
-              Apply on fast branch
-            </button>
+            <ApplyOnFastBranchButton disabled={isApplied} />
           </div>
         </div>
       );

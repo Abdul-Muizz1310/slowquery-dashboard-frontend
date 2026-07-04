@@ -1,6 +1,10 @@
 /**
- * Spec 02 — CanonicalSql Monaco viewer.
- * Cases 1 (SSR fallback), 8, 9 (unicode + escape), 18 (Monaco readOnly), 22 (readOnly asserted).
+ * Spec 02 — CanonicalSql viewer.
+ * Cases 1 (server-rendered <pre>), 8, 9 (unicode + escape).
+ *
+ * The Monaco readOnly cases (18/22) were deleted with the editor itself:
+ * it was mounted in a permanently hidden div and never visible (audit
+ * OPT-1). The visible, XSS-safe <pre> is the only SQL surface now.
  */
 
 import { cleanup, render } from "@testing-library/react";
@@ -28,13 +32,8 @@ describe("spec 02 — CanonicalSql", () => {
     const { CanonicalSql } = await import("@/features/query-detail/canonical-sql");
     const { renderToStaticMarkup } = await import("react-dom/server");
     const html = renderToStaticMarkup(<CanonicalSql sql={"SELECT 1 -- </pre> comment"} />);
-    // The fallback <pre> still wraps a single text node; the embedded </pre>
+    // The <pre> wraps a single text node; the embedded </pre>
     // must be escaped as &lt;/pre&gt; in the server HTML.
     expect(html).toContain("&lt;/pre&gt;");
-  });
-
-  it("case 18 / 22 security: Monaco is mounted with readOnly: true", async () => {
-    const { MONACO_OPTIONS } = await import("@/features/query-detail/canonical-sql");
-    expect(MONACO_OPTIONS.readOnly).toBe(true);
   });
 });

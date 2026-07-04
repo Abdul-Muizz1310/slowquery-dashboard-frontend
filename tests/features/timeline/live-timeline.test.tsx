@@ -22,7 +22,7 @@ describe("spec 03 — LiveTimeline", () => {
 
   it("case 2 happy: three tick events append to the buffer", async () => {
     const { applyEvent } = await import("@/features/timeline/buffer");
-    let buf = { byId: new Map<string, number[]>() };
+    let buf = { byId: new Map() };
     buf = applyEvent(buf, tickOrdersCreatedAt);
     buf = applyEvent(buf, tickOrdersCreatedAt);
     buf = applyEvent(buf, tickOrdersCreatedAt);
@@ -44,7 +44,7 @@ describe("spec 03 — LiveTimeline", () => {
 
   it("case 6 edge: buffer caps at 60 points per fingerprint", async () => {
     const { applyEvent } = await import("@/features/timeline/buffer");
-    let buf = { byId: new Map<string, number[]>() };
+    let buf = { byId: new Map() };
     for (let i = 0; i < 65; i++) buf = applyEvent(buf, tickOrdersCreatedAt);
     expect(buf.byId.get(tickOrdersCreatedAt.fingerprint_id)?.length).toBe(60);
   });
@@ -55,9 +55,9 @@ describe("spec 03 — LiveTimeline", () => {
     const result = trackTopN(
       {
         byId: new Map([
-          ["a", [1]],
-          ["b", [1]],
-          ["c", [1]],
+          ["a", [{ t: 0, p95: 1 }]],
+          ["b", [{ t: 0, p95: 1 }]],
+          ["c", [{ t: 0, p95: 1 }]],
         ]),
       },
       ["a", "b"],

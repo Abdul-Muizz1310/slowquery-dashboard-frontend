@@ -13,11 +13,13 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import type { BranchMarker } from "./branch-marker";
 
 export interface ChartPoint {
   t: number;
@@ -32,6 +34,7 @@ export interface ChartSeries {
 
 interface LatencyChartProps {
   series: readonly ChartSeries[];
+  markers?: readonly BranchMarker[];
   errorOverlay?: { status: number; message: string };
 }
 
@@ -44,9 +47,13 @@ export function formatXLabel(timestamp: number, now: number): string {
 
 const COLOURS = ["#f97316", "#ef4444", "#22c55e", "#3b82f6", "#f59e0b", "#8b5cf6"];
 
-export function LatencyChart({ series, errorOverlay }: LatencyChartProps) {
+export function LatencyChart({ series, markers, errorOverlay }: LatencyChartProps) {
   const rows = mergeSeries(series);
   const hasData = rows.length > 0;
+  // `t` values are real Unix-ms timestamps (see buffer.ts TimePoint), so
+  // the tick label is an accurate "Ns ago" via the shared formatter rather
+  // than raw epoch arithmetic on an array index.
+  const now = Date.now();
 
   return (
     <div className="relative w-full">
@@ -56,7 +63,9 @@ export function LatencyChart({ series, errorOverlay }: LatencyChartProps) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="t"
-              tickFormatter={(v) => `${Math.round((Date.now() - v) / 1000)}s`}
+              type="number"
+              domain={["dataMin", "dataMax"]}
+              tickFormatter={(v: number) => formatXLabel(v, now)}
               stroke="var(--fg-faint)"
               tick={{ fill: "var(--fg-faint)", fontSize: 11 }}
             />
@@ -95,6 +104,20 @@ export function LatencyChart({ series, errorOverlay }: LatencyChartProps) {
                 strokeWidth={2}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
+              />
+            ))}
+            {(markers ?? []).map((m) => (
+              <ReferenceLine
+                key={`${m.active}-${m.x}`}
+                x={m.x}
+                stroke={m.active === "fast" ? "var(--success)" : "var(--error)"}
+                strokeDasharray="4 2"
+                label={{
+                  value: `→ ${m.active}`,
+                  position: "top",
+                  fill: m.active === "fast" ? "var(--success)" : "var(--error)",
+                  fontSize: 10,
+                }}
               />
             ))}
           </LineChart>

@@ -24,6 +24,18 @@ export const fingerprintOrdersByCreatedAt = {
   p95_ms: 2041,
   p99_ms: 2210,
   max_ms: 2240,
+  suggestions: [
+    {
+      id: 501,
+      fingerprint_id: FINGERPRINT_ORDERS_BY_CREATED_AT_ID,
+      kind: "index",
+      source: "rules",
+      rule: "sort_without_index",
+      sql: "CREATE INDEX IF NOT EXISTS ix_orders_created_at ON orders(created_at);",
+      rationale: "Sort node with high cost on orders.created_at.",
+      applied_at: null,
+    },
+  ],
 } as const;
 
 export const fingerprintUsersOrders = {
@@ -37,6 +49,18 @@ export const fingerprintUsersOrders = {
   p95_ms: 612,
   p99_ms: 891,
   max_ms: 902,
+  suggestions: [
+    {
+      id: 502,
+      fingerprint_id: FINGERPRINT_USERS_ORDERS_ID,
+      kind: "index",
+      source: "llm",
+      rule: null,
+      sql: "CREATE INDEX IF NOT EXISTS ix_orders_user_id ON orders(user_id);",
+      rationale: "WHERE user_id = ? filters most rows; an index keeps it selective.",
+      applied_at: null,
+    },
+  ],
 } as const;
 
 export const fingerprintNPlusOne = {

@@ -7,17 +7,32 @@
 
 import { useBranchStore } from "./use-branch-store";
 
-export function ApplyOnFastBranchButton() {
+interface ApplyOnFastBranchButtonProps {
+  /**
+   * When true the control is force-disabled regardless of store state
+   * (e.g. the suggestion was already applied). The label stays
+   * "Apply on fast branch" so callers can pair it with an Applied badge.
+   */
+  disabled?: boolean;
+}
+
+export function ApplyOnFastBranchButton({ disabled = false }: ApplyOnFastBranchButtonProps = {}) {
   const active = useBranchStore((s) => s.activeBranch);
   const inFlight = useBranchStore((s) => s.switchInFlight);
   const switchBranch = useBranchStore((s) => s.switch);
 
   const isFast = active === "fast";
-  const label = inFlight ? "Switching…" : isFast ? "Already on fast" : "Apply on fast branch";
+  const label = disabled
+    ? "Apply on fast branch"
+    : inFlight
+      ? "Switching…"
+      : isFast
+        ? "Already on fast"
+        : "Apply on fast branch";
   return (
     <button
       type="button"
-      disabled={inFlight || isFast}
+      disabled={disabled || inFlight || isFast}
       onClick={() => {
         void switchBranch("fast");
       }}
