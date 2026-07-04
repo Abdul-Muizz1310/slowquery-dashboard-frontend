@@ -3,9 +3,10 @@ import { TerminalWindow } from "@/components/terminal/TerminalWindow";
 import { ErrorState } from "@/features/fingerprints/error-state";
 import { FingerprintsTable } from "@/features/fingerprints/fingerprints-table";
 import { normaliseSortParams } from "@/features/fingerprints/parse";
-import { apiClient } from "@/lib/api/client";
+import { getCachedFingerprints } from "@/lib/api/cached";
 import type { ApiError } from "@/lib/api/errors";
 import { ConfigError, HttpError, NetworkError, ParseError, TimeoutError } from "@/lib/api/errors";
+import type { Fingerprint } from "@/lib/api/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -25,27 +26,19 @@ function isApiError(value: unknown): value is ApiError {
 
 export default async function Page({ searchParams }: PageProps) {
   const { sort, order } = normaliseSortParams(await searchParams);
-  let result: Awaited<ReturnType<typeof apiClient.listFingerprints>> | null = null;
+  let result: Fingerprint[] | null = null;
   let error: ApiError | null = null;
-  // Render free tier cold-starts return empty during the first ~30s while
-  // the DB pool initializes. Retry once after a short delay so the page
-  // renders with data instead of the empty state on first visit.
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      result = await apiClient.listFingerprints();
-      if (result.length > 0 || attempt > 0) break;
-      // Empty on first try — backend may be cold-starting. Wait and retry.
-      await new Promise((r) => setTimeout(r, 3000));
-    } catch (err) {
-      if (attempt > 0) {
-        if (isApiError(err)) {
-          error = err;
-        } else {
-          throw err;
-        }
-      }
-      // First attempt failed — wait and retry.
-      await new Promise((r) => setTimeout(r, 3000));
+  // Cold-start retry + the short-lived shared cache live in the api layer
+  // (getCachedFingerprints → apiClient.listFingerprints), not here: a
+  // genuinely-empty 200 renders instantly, a waking backend is retried once,
+  // and concurrent viewers reuse one round-trip.
+  try {
+    result = await getCachedFingerprints();
+  } catch (err) {
+    if (isApiError(err)) {
+      error = err;
+    } else {
+      throw err;
     }
   }
 

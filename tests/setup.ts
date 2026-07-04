@@ -1,6 +1,14 @@
 import "@testing-library/jest-dom/vitest";
-import { afterAll, afterEach, beforeAll } from "vitest";
+import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { server } from "./mocks/server";
+
+// `unstable_cache` requires Next's incremental cache in the request scope,
+// which doesn't exist when a page RSC is invoked directly in vitest. Shim it
+// to a passthrough so the cached fetch delegates straight to the api client
+// (which MSW intercepts). Production still uses the real Next data cache.
+vi.mock("next/cache", () => ({
+  unstable_cache: (fn: unknown) => fn,
+}));
 
 // Populate NEXT_PUBLIC_* before any module that imports `@/lib/env`
 // evaluates — env.ts throws at import time on missing values.

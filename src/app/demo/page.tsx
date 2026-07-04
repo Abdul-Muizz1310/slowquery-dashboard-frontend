@@ -7,7 +7,8 @@
  */
 
 import type { Metadata } from "next";
-import { apiClient } from "@/lib/api/client";
+import { getCachedFingerprints } from "@/lib/api/cached";
+import type { Fingerprint } from "@/lib/api/schemas";
 import { DemoPanel } from "./demo-panel";
 
 export const metadata: Metadata = {
@@ -18,10 +19,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
-  let seed: Awaited<ReturnType<typeof apiClient.listFingerprints>> = [];
+  let seed: Fingerprint[] = [];
   let error: { kind: "http"; status: number; message: string } | undefined;
   try {
-    seed = await apiClient.listFingerprints();
+    seed = await getCachedFingerprints();
   } catch (err) {
     error = { kind: "http", status: 500, message: (err as Error).message };
   }

@@ -22,10 +22,10 @@ import {
   FingerprintDetailSchema,
   FingerprintsListSchema,
   type StreamEvent,
-  StreamEventSchema,
   type SwitchBranchResponse,
   SwitchBranchResponseSchema,
 } from "./schemas";
+import { parseSseFrame } from "./sse";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 // Render free tier cold-starts can take 30-60s. Server-side fetches
@@ -33,6 +33,34 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 // backend to wake instead of showing an empty state immediately.
 const SERVER_FETCH_TIMEOUT_MS = 45_000;
 const SWITCH_BRANCH_TIMEOUT_MS = DEFAULT_TIMEOUT_MS;
+// Backoff before a single cold-start retry (see withColdStartRetry).
+const COLD_START_RETRY_BACKOFF_MS = 800;
+
+/**
+ * Cold-start retry policy (owned by the api layer, not the page — the
+ * former inlined this in app/page.tsx). One retry on the signals that mean
+ * "backend is waking / transiently 5xx": a NetworkError or a 5xx HttpError.
+ *
+ * A TimeoutError is NOT retried — the request already waited the full
+ * SERVER_FETCH_TIMEOUT_MS window, so retrying would just double the wall
+ * time. A successful-but-empty 200 also returns immediately, so a dashboard
+ * with genuinely zero fingerprints never pays a retry penalty.
+ */
+export function isColdStartError(err: unknown): boolean {
+  if (err instanceof NetworkError) return true;
+  if (err instanceof HttpError) return err.status >= 500;
+  return false;
+}
+
+export async function withColdStartRetry<T>(op: () => Promise<T>): Promise<T> {
+  try {
+    return await op();
+  } catch (err) {
+    if (!isColdStartError(err)) throw err;
+    await new Promise((resolve) => setTimeout(resolve, COLD_START_RETRY_BACKOFF_MS));
+    return op();
+  }
+}
 
 interface RequestOptions {
   method?: "GET" | "POST";
@@ -99,8 +127,7 @@ async function request<T>(
   } catch (err) {
     const issue =
       typeof err === "object" && err !== null && "issues" in err
-        ? // biome-ignore lint/suspicious/noExplicitAny: zod error issues are well-typed but reach across versions
-          (err as { issues: Array<{ path: Array<string | number> }> }).issues[0]
+        ? (err as { issues: Array<{ path: Array<string | number> }> }).issues[0]
         : null;
     const path = issue ? issue.path.join(".") : "$";
     throw new ParseError(`response did not match schema at ${path}`, path);
@@ -146,20 +173,13 @@ async function* streamFingerprints(signal: AbortSignal): AsyncIterable<StreamEve
         if (signal.aborted) return;
         const frame = buffer.slice(0, frameEnd);
         buffer = buffer.slice(frameEnd + 2);
-        const trimmed = frame.trim();
-        if (trimmed.startsWith("data:")) {
-          const payload = trimmed.slice("data:".length).trim();
-          try {
-            const json: unknown = JSON.parse(payload);
-            const parsed = StreamEventSchema.safeParse(json);
-            if (parsed.success) {
-              yield parsed.data;
-              if (signal.aborted) return;
-            }
-            // malformed frames are silently skipped per spec 00 case 21
-          } catch {
-            // ignore
-          }
+        // Single owner of the SSE wire format: parseSseFrame strips the
+        // `data:` prefix, JSON-parses, and Zod-validates. Malformed frames
+        // return null and are silently skipped (spec 00 case 21).
+        const event = parseSseFrame(frame);
+        if (event) {
+          yield event;
+          if (signal.aborted) return;
         }
         frameEnd = buffer.indexOf("\n\n");
       }
@@ -179,14 +199,18 @@ async function* streamFingerprints(signal: AbortSignal): AsyncIterable<StreamEve
 
 export const apiClient = {
   listFingerprints(): Promise<Fingerprint[]> {
-    return request("/_slowquery/queries", FingerprintsListSchema, {
-      timeoutMs: SERVER_FETCH_TIMEOUT_MS,
-    });
+    return withColdStartRetry(() =>
+      request("/_slowquery/queries", FingerprintsListSchema, {
+        timeoutMs: SERVER_FETCH_TIMEOUT_MS,
+      }),
+    );
   },
   getFingerprint(id: string): Promise<FingerprintDetail> {
-    return request(`/_slowquery/queries/${id}`, FingerprintDetailSchema, {
-      timeoutMs: SERVER_FETCH_TIMEOUT_MS,
-    });
+    return withColdStartRetry(() =>
+      request(`/_slowquery/queries/${id}`, FingerprintDetailSchema, {
+        timeoutMs: SERVER_FETCH_TIMEOUT_MS,
+      }),
+    );
   },
   switchBranch(target: BranchName): Promise<SwitchBranchResponse> {
     return request("/branches/switch", SwitchBranchResponseSchema, {
