@@ -29,4 +29,23 @@ describe("spec 02 — RecentSamplesTable", () => {
     render(<RecentSamplesTable samples={[]} />);
     expect(screen.getByText(/no recent samples/i)).toBeInTheDocument();
   });
+
+  it("null-safe formatting (extended): a sample with rows=null renders an em-dash, not 'null'", async () => {
+    const { RecentSamplesTable } = await import("@/features/query-detail/recent-samples-table");
+    render(
+      <RecentSamplesTable
+        samples={[
+          {
+            id: 1,
+            fingerprint_id: "deadbeefdeadbeef",
+            params: null,
+            duration_ms: 100,
+            rows: null,
+            sampled_at: "2026-04-12T01:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("—")).toBeInTheDocument();
+  });
 });

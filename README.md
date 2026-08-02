@@ -11,7 +11,7 @@
 ![tailwind](https://img.shields.io/badge/Tailwind-v4-06b6d4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![zod](https://img.shields.io/badge/Zod-boundaries-3068b7?style=flat-square)
 ![biome](https://img.shields.io/badge/lint-Biome%202-60a5fa?style=flat-square)
-![tests](https://img.shields.io/badge/tests-193%20vitest-6e9f18?style=flat-square)
+![tests](https://img.shields.io/badge/tests-213%20vitest-6e9f18?style=flat-square)
 ![vercel](https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white)
 [![ci](https://github.com/Abdul-Muizz1310/slowquery-dashboard-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/Abdul-Muizz1310/slowquery-dashboard-frontend/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
@@ -56,7 +56,7 @@ The demo's punchline: click "apply suggestion" and watch the live p95 timeline d
 - 🖥️ Terminal aesthetic — dark mode, monospace, grid backgrounds
 - 🎬 Chromeless `/demo` view for README gifs
 - 🛡️ Zod validation at every API boundary
-- ✅ 193 vitest tests across 24 test files (incl. composed-path integration tests) — red-first TDD, 88.4% line coverage
+- ✅ 213 vitest tests across 27 test files (incl. composed-path integration tests) — red-first TDD, 95.43% line coverage
 
 ---
 
@@ -68,7 +68,7 @@ flowchart TD
     Vercel --> NextJS[Next.js 16<br/>App Router + RSC]
     NextJS -->|REST + SSE| Backend[slowquery-demo-backend<br/>FastAPI on Render]
     Backend --> NeonSlow[(Neon Postgres<br/>slowquery branch<br/>no indexes)]
-    Backend --> NeonFast[(Neon Postgres<br/>slowquery-fast branch<br/>3 indexes)]
+    Backend --> NeonFast[(Neon Postgres<br/>slowquery-fast branch<br/>4 indexes)]
 ```
 
 ### 🔀 Branch switch flow
@@ -104,25 +104,36 @@ flowchart LR
 ```
 src/
 ├── app/
-│   ├── page.tsx                 # / — fingerprints table
+│   ├── page.tsx                 # / — fingerprints table (RSC)
 │   ├── layout.tsx               # Root layout + terminal chrome
+│   ├── not-found.tsx            # Global 404
 │   ├── queries/[id]/
-│   │   └── page.tsx             # Single fingerprint detail
+│   │   └── page.tsx             # Single fingerprint detail (RSC)
 │   ├── timeline/
-│   │   └── page.tsx             # Live p95 chart via SSE
+│   │   └── page.tsx             # Live p95 chart via SSE (RSC)
 │   └── demo/
-│       └── page.tsx             # Chromeless demo view
-├── components/
-│   ├── FingerprintsTable.tsx    # Sortable table with rule badges
-│   ├── QueryDetail.tsx          # canonical SQL + EXPLAIN + suggestions
-│   ├── TimelineChart.tsx        # Recharts p95 line chart
-│   ├── BranchSwitch.tsx         # Slow ↔ fast toggle
-│   └── SuggestionCard.tsx       # Rule / LLM suggestion display
+│       ├── page.tsx             # Chromeless demo view (RSC)
+│       ├── layout.tsx           # 1280×720 clamp + overflow-hidden shell
+│       └── demo-panel.tsx       # Two-column fingerprints + timeline composition
+├── components/terminal/
+│   ├── AppNav.tsx                # Top nav shared across routes
+│   ├── PageFrame.tsx             # Page shell: nav + status bar + background
+│   ├── StatusBar.tsx             # Bottom status line
+│   └── TerminalWindow.tsx        # macOS-dot terminal window chrome
+├── features/
+│   ├── fingerprints/            # Table, sort header, rule badges, formatters, parse
+│   ├── query-detail/            # Canonical SQL, EXPLAIN viewer, suggestion cards, samples table
+│   ├── timeline/                # Live chart, SSE buffer/backoff/status, branch markers, top-N
+│   └── branches/                # Apply button, branch indicator, switch toast, Zustand store
 └── lib/
-    ├── api.ts                   # REST fetch + Zod parsing
-    ├── sse.ts                   # SSE hook for timeline stream
-    ├── store.ts                 # Zustand time-series state
-    └── schemas.ts               # Zod schemas for all API shapes
+    ├── api/
+    │   ├── client.ts            # Typed fetch client wrapping every backend endpoint
+    │   ├── cached.ts            # Short-lived shared cache for the fingerprint list
+    │   ├── schemas.ts           # Zod schemas for all API shapes
+    │   ├── errors.ts            # Discriminated typed error union
+    │   └── sse.ts               # SSE frame parsing + reconnection helper
+    ├── env.ts                   # Runtime env parsing via Zod
+    └── utils.ts                 # Shared small helpers (e.g. `cn`)
 ```
 
 ---
@@ -149,7 +160,7 @@ src/
 | **Code viewer** | Read-only `<pre>` (no editor dependency — keeps the detail page light) |
 | **Validation** | Zod at all backend/API boundaries |
 | **State** | Zustand (timeline store) |
-| **Testing** | Vitest 4 + Testing Library + jsdom (193 tests, 88.4% line coverage) · Playwright (E2E) |
+| **Testing** | Vitest 4 + Testing Library + jsdom (213 tests, 95.43% line coverage) · Playwright (E2E) |
 | **Lint / Format** | Biome 2 |
 | **Package manager** | pnpm 10, Node 24 |
 | **Hosting** | Vercel Hobby, auto-deploy on push to main |
@@ -195,8 +206,8 @@ pnpm test:e2e                # Playwright chromium
 
 | Metric | Value |
 |---|---|
-| **Unit tests** | 193 tests across 24 files (Vitest + jsdom) |
-| **Line coverage** | **88.4%** |
+| **Unit tests** | 213 tests across 27 files (Vitest + jsdom) |
+| **Line coverage** | **95.43%** |
 | **E2E** | Playwright (chromium only) |
 | **Methodology** | Red-first spec-TDD. Every spec in `docs/specs/` with enumerated test cases before code ships. |
 
@@ -206,7 +217,7 @@ pnpm test:e2e                # Playwright chromium
 
 | Principle | How it shows up |
 |---|---|
-| 🧪 **Spec-TDD** | Every feature has a spec in `docs/specs/` with enumerated test cases before code ships. 193 tests all green. |
+| 🧪 **Spec-TDD** | Every feature has a spec in `docs/specs/` with enumerated test cases before code ships. 213 tests all green. |
 | 🛡️ **Negative-space programming** | Zod parse at every boundary, discriminated unions for suggestion kinds, `Literal` types for branch targets. |
 | 🏗️ **Separation of concerns** | `app/` thin routes · `components/` dumb presentational · `lib/` owns side effects. |
 | 🔤 **Typed everything** | TypeScript 5 strict, no `any`. Zod-inferred types flow end-to-end. |

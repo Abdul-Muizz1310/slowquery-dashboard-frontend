@@ -12,7 +12,8 @@ afterEach(cleanup);
 describe("spec 02 — ExplainPlanViewer", () => {
   it("case 3 happy: top-level Sort node highlighted as cost hotspot", async () => {
     const { ExplainPlanViewer } = await import("@/features/query-detail/explain-plan-viewer");
-    render(<ExplainPlanViewer plan={detailOrdersByCreatedAt.explain_plan!} />);
+    if (!detailOrdersByCreatedAt.explain_plan) throw new Error("fixture must have an explain plan");
+    render(<ExplainPlanViewer plan={detailOrdersByCreatedAt.explain_plan} />);
     const sortNode = screen.getByText(/^Sort$/);
     expect(sortNode.className).toMatch(/hotspot|red|warning/);
   });
@@ -54,5 +55,82 @@ describe("spec 02 — ExplainPlanViewer", () => {
     );
     expect(container.querySelector("script")).toBeNull();
     expect(container.textContent).toContain("<script>alert(1)</script>");
+  });
+
+  it("case 3 (extended): a non-hotspot node type renders without the hotspot class", async () => {
+    const { ExplainPlanViewer } = await import("@/features/query-detail/explain-plan-viewer");
+    render(
+      <ExplainPlanViewer
+        plan={{
+          fingerprint_id: "deadbeefdeadbeef",
+          plan_json: {
+            "Node Type": "Index Scan",
+            "Total Cost": 100,
+            "Plan Rows": 10,
+            "Relation Name": "users",
+          },
+          plan_text: "...",
+          cost: 100,
+          captured_at: "2026-04-12T01:00:00.000Z",
+        }}
+      />,
+    );
+    const node = screen.getByText("Index Scan");
+    expect(node.className).toMatch(/text-foreground/);
+    expect(node.className).not.toMatch(/hotspot/);
+  });
+
+  it("Outputs (extended): recursive plan tree renders nested child nodes, skipping non-node entries", async () => {
+    const { ExplainPlanViewer } = await import("@/features/query-detail/explain-plan-viewer");
+    render(
+      <ExplainPlanViewer
+        plan={{
+          fingerprint_id: "deadbeefdeadbeef",
+          plan_json: {
+            "Node Type": "Nested Loop",
+            "Total Cost": 500,
+            Plans: [
+              {
+                "Node Type": "Index Scan",
+                "Total Cost": 100,
+                "Plan Rows": 10,
+                "Relation Name": "users",
+              },
+              {
+                "Node Type": "Seq Scan",
+                "Total Cost": 200,
+                "Relation Name": "orders",
+              },
+            ],
+          },
+          plan_text: "...",
+          cost: 500,
+          captured_at: "2026-04-12T01:00:00.000Z",
+        }}
+      />,
+    );
+    expect(screen.getByText("Nested Loop")).toBeInTheDocument();
+    expect(screen.getByText("Index Scan")).toBeInTheDocument();
+    expect(screen.getByText("Seq Scan")).toBeInTheDocument();
+  });
+
+  it("case 14 (extended): a non-PlanNode entry in the Plans array is skipped, not crashed on", async () => {
+    const { ExplainPlanViewer } = await import("@/features/query-detail/explain-plan-viewer");
+    render(
+      <ExplainPlanViewer
+        plan={{
+          fingerprint_id: "deadbeefdeadbeef",
+          plan_json: {
+            "Node Type": "Limit",
+            Plans: ["not a plan node", { "Node Type": "Sort", "Total Cost": 10 }] as unknown[],
+          },
+          plan_text: "...",
+          cost: null,
+          captured_at: "2026-04-12T01:00:00.000Z",
+        }}
+      />,
+    );
+    expect(screen.getByText("Limit")).toBeInTheDocument();
+    expect(screen.getByText("Sort")).toBeInTheDocument();
   });
 });

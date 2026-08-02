@@ -42,6 +42,12 @@ describe("spec 01 — page and link wiring", () => {
     expect(result.order).toBe("desc");
   });
 
+  it("case 18 (order variant): invalid order searchParam falls back to desc", async () => {
+    const { normaliseSortParams } = await import("@/features/fingerprints/parse");
+    const result = normaliseSortParams({ sort: "total_ms", order: "bogus" });
+    expect(result.order).toBe("desc");
+  });
+
   it("case 19 security: query string roundtrip does not leak extra fields", async () => {
     const { normaliseSortParams } = await import("@/features/fingerprints/parse");
     const result = normaliseSortParams({

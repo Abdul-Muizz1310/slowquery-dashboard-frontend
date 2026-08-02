@@ -4,8 +4,12 @@
  */
 
 import { cleanup, render, screen } from "@testing-library/react";
+import { HttpResponse, http } from "msw";
 import { afterEach, describe, expect, it } from "vitest";
-import { fingerprintsList } from "../../mocks/fixtures/fingerprints";
+import { fingerprintOrdersByCreatedAt, fingerprintsList } from "../../mocks/fixtures/fingerprints";
+import { server } from "../../mocks/server";
+
+const API = "https://slowquery-demo-backend.onrender.com";
 
 afterEach(cleanup);
 
@@ -20,7 +24,7 @@ describe("spec 05 — /demo", () => {
   it("case 2 happy: left panel shows exactly 5 rows when compact=true", async () => {
     const { FingerprintsTable } = await import("@/features/fingerprints/fingerprints-table");
     const many = Array.from({ length: 8 }, (_, i) => ({
-      ...fingerprintsList[0]!,
+      ...fingerprintOrdersByCreatedAt,
       id: `deadbeefdeadbe${i.toString().padStart(2, "0")}`,
     }));
     render(<FingerprintsTable fingerprints={many} sort="total_ms" order="desc" compact />);
@@ -70,6 +74,35 @@ describe("spec 05 — /demo", () => {
   it("case 15 security: robots meta is present in the page module", async () => {
     const { metadata } = await import("@/app/demo/page");
     expect(metadata).toBeTruthy();
+  });
+
+  it("invariant 1: DemoLayout reuses PageFrame shell and renders children", async () => {
+    const DemoLayout = (await import("@/app/demo/layout")).default;
+    render(
+      <DemoLayout>
+        <div data-testid="child">child</div>
+      </DemoLayout>,
+    );
+    expect(screen.getByTestId("child")).toBeInTheDocument();
+    // PageFrame renders AppNav with the "demo" link marked active.
+    expect(screen.getByText("demo")).toBeInTheDocument();
+  });
+
+  it("case 1 (composed): Page() itself fetches the seed and renders DemoPanel", async () => {
+    const Page = (await import("@/app/demo/page")).default;
+    const el = await Page();
+    const { container } = render(el);
+    expect(container.querySelector("[data-testid='demo-fingerprints-panel']")).not.toBeNull();
+  });
+
+  it("case 11 (composed): Page() catches the real fetch error and forwards it to DemoPanel", async () => {
+    server.use(
+      http.get(`${API}/_slowquery/queries`, () => HttpResponse.text("boom", { status: 500 })),
+    );
+    const Page = (await import("@/app/demo/page")).default;
+    const el = await Page();
+    const { container } = render(el);
+    expect(container.textContent).toMatch(/500/);
   });
 
   it("case 16 security: no dangerouslySetInnerHTML in DemoLayout or DemoPanel sources", async () => {

@@ -137,4 +137,66 @@ describe("spec 00 — apiClient", () => {
     await apiClient.switchBranch("fast");
     expect(seenBody).toEqual({ target: "fast" });
   });
+
+  it("case 15 (extended): getFingerprint with an unknown id throws HttpError(404)", async () => {
+    const { apiClient } = await import("@/lib/api/client");
+    const { HttpError } = await import("@/lib/api/errors");
+    await expect(apiClient.getFingerprint("0000000000000000")).rejects.toBeInstanceOf(HttpError);
+  });
+
+  it("contract (extended): the mock backend's 422 shape for an invalid branch target", async () => {
+    const res = await fetch(`${API}/branches/switch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target: "invalid_branch" }),
+    });
+    expect(res.status).toBe(422);
+  });
+
+  it("case 18 (extended): an aborted signal carrying a TimeoutError reason throws TimeoutError", async () => {
+    const timeoutReason = new DOMException("timed out", "TimeoutError");
+    const controller = new AbortController();
+    controller.abort(timeoutReason);
+    const { apiClient } = await import("@/lib/api/client");
+    const { TimeoutError } = await import("@/lib/api/errors");
+    const origTimeout = AbortSignal.timeout;
+    AbortSignal.timeout = () => controller.signal;
+    try {
+      await expect(apiClient.listFingerprints()).rejects.toBeInstanceOf(TimeoutError);
+    } finally {
+      AbortSignal.timeout = origTimeout;
+    }
+  });
+
+  it("case 18 (extended): an aborted signal with a non-timeout reason still maps to TimeoutError (the only signal in play is the timeout signal)", async () => {
+    const controller = new AbortController();
+    controller.abort(new DOMException("user abort", "AbortError"));
+    const { apiClient } = await import("@/lib/api/client");
+    const { TimeoutError } = await import("@/lib/api/errors");
+    const origTimeout = AbortSignal.timeout;
+    AbortSignal.timeout = () => controller.signal;
+    try {
+      await expect(apiClient.listFingerprints()).rejects.toBeInstanceOf(TimeoutError);
+    } finally {
+      AbortSignal.timeout = origTimeout;
+    }
+  });
+
+  it("case 18 (extended): a fetch rejection whose cause names TimeoutError still maps to TimeoutError", async () => {
+    const { TimeoutError } = await import("@/lib/api/errors");
+    const { apiClient } = await import("@/lib/api/client");
+    const origFetch = globalThis.fetch;
+    const fakeError = new TypeError("failed to fetch");
+    Object.defineProperty(fakeError, "cause", {
+      value: new DOMException("timed out", "TimeoutError"),
+    });
+    globalThis.fetch = () => {
+      throw fakeError;
+    };
+    try {
+      await expect(apiClient.switchBranch("fast")).rejects.toBeInstanceOf(TimeoutError);
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
 });

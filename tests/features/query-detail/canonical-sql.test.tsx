@@ -36,4 +36,11 @@ describe("spec 02 — CanonicalSql", () => {
     // must be escaped as &lt;/pre&gt; in the server HTML.
     expect(html).toContain("&lt;/pre&gt;");
   });
+
+  it("OPT-1 regression: the visible <pre> is the only SQL surface, no hidden editor mounts", async () => {
+    const { CanonicalSql } = await import("@/features/query-detail/canonical-sql");
+    const { container } = render(<CanonicalSql sql="SELECT 1" />);
+    expect(container.querySelector("pre")?.textContent).toContain("SELECT 1");
+    expect(container.querySelector(".hidden")).toBeNull();
+  });
 });

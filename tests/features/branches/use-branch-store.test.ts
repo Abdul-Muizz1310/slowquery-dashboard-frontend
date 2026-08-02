@@ -148,6 +148,27 @@ describe("spec 04 — useBranchStore", () => {
     expect(useBranchStore.getState().activeBranch).toBe("slow");
   }, 15_000);
 
+  it("failure (beyond the enumerated list): a non-Error rejection still wraps to a friendly message", async () => {
+    // The typed error union (spec 00) assumes apiClient always rejects with
+    // one of its known error classes; this guards the store's catch-all
+    // path in case `switchBranch` is monkey-patched or a future refactor
+    // rejects with a bare value instead.
+    const { apiClient } = await import("@/lib/api/client");
+    const { useBranchStore } = await import("@/features/branches/use-branch-store");
+    useBranchStore.getState().hydrate("slow");
+    const origSwitch = apiClient.switchBranch;
+    apiClient.switchBranch = () => Promise.reject(42);
+    try {
+      const result = await useBranchStore
+        .getState()
+        .switch("fast")
+        .catch((e: unknown) => e);
+      expect(String(result)).toMatch(/branch switch failed/i);
+    } finally {
+      apiClient.switchBranch = origSwitch;
+    }
+  });
+
   it("case 15 failure: ParseError path keeps activeBranch unchanged", async () => {
     server.use(
       http.post(`${API}/branches/switch`, () => HttpResponse.json({ unexpected: "shape" })),

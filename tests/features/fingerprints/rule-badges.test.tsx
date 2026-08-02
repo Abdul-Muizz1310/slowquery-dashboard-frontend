@@ -86,4 +86,47 @@ describe("spec 01 — RuleBadges", () => {
     const badge = screen.getByText(/bogus_rule/);
     expect(badge.className).toMatch(/neutral/);
   });
+
+  it("case 10 (extended): source=rules with a null rule name renders the 'rule' label, neutral severity", async () => {
+    const { RuleBadges } = await import("@/features/fingerprints/rule-badges");
+    render(
+      <RuleBadges
+        suggestions={[
+          {
+            id: 1,
+            fingerprint_id: "deadbeefdeadbeef",
+            kind: "index",
+            source: "rules",
+            rule: null,
+            sql: null,
+            rationale: "",
+            applied_at: null,
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("rule")).toBeInTheDocument();
+  });
+
+  it("Outputs (extended): source=llm renders the 'llm' label in purple", async () => {
+    const { RuleBadges } = await import("@/features/fingerprints/rule-badges");
+    render(
+      <RuleBadges
+        suggestions={[
+          {
+            id: 1,
+            fingerprint_id: "deadbeefdeadbeef",
+            kind: "index",
+            source: "llm",
+            rule: null,
+            sql: null,
+            rationale: "",
+            applied_at: null,
+          },
+        ]}
+      />,
+    );
+    const badge = screen.getByText("llm");
+    expect(badge.className).toMatch(/8b5cf6/);
+  });
 });

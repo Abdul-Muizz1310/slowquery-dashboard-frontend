@@ -60,4 +60,43 @@ describe("spec 03 — LatencyChart + selectors", () => {
     expect(shouldDisconnectOnVisibility("hidden")).toBe(true);
     expect(shouldDisconnectOnVisibility("visible")).toBe(false);
   });
+
+  it("case 9 (extended): X axis formats minute-scale deltas as '1m ago' / '2m ago'", async () => {
+    const { formatXLabel } = await import("@/features/timeline/latency-chart");
+    const now = 1_712_000_000_000;
+    expect(formatXLabel(now - 60_000, now)).toBe("1m ago");
+    expect(formatXLabel(now - 120_000, now)).toBe("2m ago");
+  });
+
+  it("Outputs (extended): empty series renders the waiting-for-data state; a non-empty series does not", async () => {
+    const { LatencyChart } = await import("@/features/timeline/latency-chart");
+    const empty = render(<LatencyChart series={[]} />);
+    expect(empty.getByText(/waiting for data/i)).toBeInTheDocument();
+    empty.unmount();
+
+    const populated = render(
+      <LatencyChart
+        series={[
+          {
+            id: "abc",
+            label: "SELECT 1",
+            points: [
+              { t: 1, p95: 10 },
+              { t: 2, p95: 20 },
+            ],
+          },
+        ]}
+      />,
+    );
+    expect(populated.queryByText(/waiting for data/i)).toBeNull();
+  });
+
+  it("Outputs (extended): long fingerprint labels are truncated, not overflowed", async () => {
+    const { LatencyChart } = await import("@/features/timeline/latency-chart");
+    const longLabel = "A".repeat(50);
+    render(
+      <LatencyChart series={[{ id: "abc", label: longLabel, points: [{ t: 1, p95: 10 }] }]} />,
+    );
+    expect(screen.queryByText(/waiting for data/i)).toBeNull();
+  });
 });

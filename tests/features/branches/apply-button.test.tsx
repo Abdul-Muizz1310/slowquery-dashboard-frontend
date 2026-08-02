@@ -4,7 +4,7 @@
  */
 
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 afterEach(cleanup);
 
@@ -27,6 +27,19 @@ describe("spec 04 — UI surfaces", () => {
     render(<ApplyOnFastBranchButton />);
     const btn = screen.getByRole("button", { name: /already on fast/i });
     expect(btn.hasAttribute("disabled")).toBe(true);
+  });
+
+  it("case 1 (component wiring): clicking the button drives the store's switch()", async () => {
+    const { ApplyOnFastBranchButton } = await import("@/features/branches/apply-button");
+    const { useBranchStore } = await import("@/features/branches/use-branch-store");
+    useBranchStore.getState().reset();
+    useBranchStore.getState().hydrate("slow");
+    render(<ApplyOnFastBranchButton />);
+    const btn = screen.getByRole("button", { name: /apply on fast/i });
+    btn.click();
+    await vi.waitFor(() => {
+      expect(useBranchStore.getState().activeBranch).toBe("fast");
+    });
   });
 
   it("case 7 edge: latency formatting boundaries 0.9s / 2.1s / 12s", async () => {

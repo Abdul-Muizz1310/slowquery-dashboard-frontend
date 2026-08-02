@@ -181,4 +181,100 @@ describe("spec 02 — SuggestionCard", () => {
     expect(container.textContent).toContain("DROP TABLE users");
     expect(container.querySelector("script")).toBeNull();
   });
+
+  it("case 12 (partition variant): kind=partition renders rationale only, no apply button", async () => {
+    const { SuggestionCard } = await import("@/features/query-detail/suggestion-card");
+    render(
+      <SuggestionCard
+        suggestion={{
+          id: 1,
+          fingerprint_id: "deadbeefdeadbeef",
+          kind: "partition",
+          source: "llm",
+          rule: null,
+          sql: null,
+          rationale: "consider range partitioning",
+          applied_at: null,
+        }}
+      />,
+    );
+    expect(screen.getByText(/range partitioning/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /apply/i })).toBeNull();
+  });
+
+  it("invariant 6: CopyButton degrades gracefully when navigator.clipboard is unavailable", async () => {
+    const { SuggestionCard } = await import("@/features/query-detail/suggestion-card");
+    const originalClipboard = navigator.clipboard;
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+    render(
+      <SuggestionCard
+        suggestion={{
+          id: 1,
+          fingerprint_id: "deadbeefdeadbeef",
+          kind: "index",
+          source: "rules",
+          rule: "sort_without_index",
+          sql: "CREATE INDEX ix ON t(c);",
+          rationale: "test",
+          applied_at: null,
+        }}
+      />,
+    );
+    const copyBtn = screen.getByRole("button", { name: /copy/i });
+    expect(() => copyBtn.click()).not.toThrow();
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("invariant 6: CopyButton invokes clipboard.writeText with the suggestion's DDL", async () => {
+    const { SuggestionCard } = await import("@/features/query-detail/suggestion-card");
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: writeTextMock },
+      writable: true,
+      configurable: true,
+    });
+    render(
+      <SuggestionCard
+        suggestion={{
+          id: 1,
+          fingerprint_id: "deadbeefdeadbeef",
+          kind: "index",
+          source: "rules",
+          rule: "sort_without_index",
+          sql: "CREATE INDEX ix ON t(c);",
+          rationale: "test",
+          applied_at: null,
+        }}
+      />,
+    );
+    screen.getByRole("button", { name: /copy/i }).click();
+    expect(writeTextMock).toHaveBeenCalledWith("CREATE INDEX ix ON t(c);");
+  });
+
+  it("invariant 5: an unreachable/unknown kind hits the exhaustive default branch without crashing", async () => {
+    const { SuggestionCard } = await import("@/features/query-detail/suggestion-card");
+    const { container } = render(
+      <SuggestionCard
+        suggestion={{
+          id: 99,
+          fingerprint_id: "deadbeefdeadbeef",
+          kind: "imaginary" as "index",
+          source: "rules",
+          rule: null,
+          sql: null,
+          rationale: "",
+          applied_at: null,
+        }}
+      />,
+    );
+    expect(container).toBeTruthy();
+  });
 });

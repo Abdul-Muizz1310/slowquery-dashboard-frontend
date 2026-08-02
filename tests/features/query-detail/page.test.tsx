@@ -1,9 +1,23 @@
 /**
  * Spec 02 — /queries/[id] RSC entry point, validation + error routing.
- * Cases 13, 15-17, 19, 23.
+ * Cases 13, 15-17, 19, 23 (helpers in isolation) plus a "composed" block
+ * that calls the actual exported `Page` — the audit's "0% coverage on the
+ * composed RSC" finding (only the extracted helpers were ever imported
+ * directly; `@/app/queries/[id]/page` itself had no importer). These drive
+ * cases 1, 6, 15-17, 19 through the real request/render path, matching the
+ * pattern already established for `/` in tests/integration/composed-paths.test.tsx.
  */
 
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { HttpResponse, http } from "msw";
+import { afterEach, describe, expect, it } from "vitest";
+import { detailNPlusOne, detailOrdersByCreatedAt } from "../../mocks/fixtures/fingerprint-detail";
+import { FINGERPRINT_ORDERS_BY_CREATED_AT_ID } from "../../mocks/fixtures/fingerprints";
+import { server } from "../../mocks/server";
+
+const API = "https://slowquery-demo-backend.onrender.com";
+
+afterEach(cleanup);
 
 describe("spec 02 — query detail page", () => {
   it("case 13 edge: unknown suggestion kind fails page-level parse", async () => {
@@ -54,5 +68,82 @@ describe("spec 02 — query detail page", () => {
         expect(fn.toString()).not.toContain("new Function(");
       }
     }
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Composed page — the actual exported `Page`, not just its helpers.   */
+/* Previously 0% covered: only parse.ts/error-routing.ts were imported */
+/* directly anywhere in the unit suite.                                */
+/* ------------------------------------------------------------------ */
+describe("spec 02 — /queries/[id] page (composed)", () => {
+  it("case 1 happy: renders header, canonical SQL, plan viewer, and suggestion card", async () => {
+    const Page = (await import("@/app/queries/[id]/page")).default;
+    const el = await Page({
+      params: Promise.resolve({ id: FINGERPRINT_ORDERS_BY_CREATED_AT_ID }),
+    });
+    render(el);
+    expect(screen.getByText(FINGERPRINT_ORDERS_BY_CREATED_AT_ID)).toBeInTheDocument();
+    expect(screen.getByText(/ORDER BY created_at DESC/)).toBeInTheDocument();
+    expect(screen.getByText("Sort")).toBeInTheDocument();
+    expect(screen.getByText(/CREATE INDEX IF NOT EXISTS ix_orders_created_at/)).toBeInTheDocument();
+  });
+
+  it("case 6 edge: explain_plan null renders the friendly notice, no viewer", async () => {
+    const Page = (await import("@/app/queries/[id]/page")).default;
+    const el = await Page({ params: Promise.resolve({ id: detailNPlusOne.fingerprint.id }) });
+    render(el);
+    expect(screen.getByText(/explain plan not captured yet/i)).toBeInTheDocument();
+  });
+
+  it("case 19 (composed) security: invalid id shape calls notFound() without hitting the backend", async () => {
+    const Page = (await import("@/app/queries/[id]/page")).default;
+    await expect(Page({ params: Promise.resolve({ id: "not-16-hex" }) })).rejects.toMatchObject({
+      digest: "NEXT_HTTP_ERROR_FALLBACK;404",
+    });
+  });
+
+  it("case 15 (composed) failure: unknown (but valid-shape) id calls notFound()", async () => {
+    const Page = (await import("@/app/queries/[id]/page")).default;
+    await expect(
+      Page({ params: Promise.resolve({ id: "0000000000000000" }) }),
+    ).rejects.toMatchObject({ digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
+  });
+
+  it("case 16 (composed) failure: backend 500 renders the error-retry panel", async () => {
+    server.use(
+      http.get(`${API}/_slowquery/queries/:id`, () => HttpResponse.text("boom", { status: 500 })),
+    );
+    const Page = (await import("@/app/queries/[id]/page")).default;
+    const el = await Page({
+      params: Promise.resolve({ id: FINGERPRINT_ORDERS_BY_CREATED_AT_ID }),
+    });
+    render(el);
+    expect(screen.getByText(/backend error — try again/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /retry/i })).toBeInTheDocument();
+  });
+
+  it("case 17 (composed) failure: malformed backend shape renders the malformed-response panel", async () => {
+    server.use(
+      http.get(`${API}/_slowquery/queries/:id`, () => HttpResponse.json({ unexpected: "shape" })),
+    );
+    const Page = (await import("@/app/queries/[id]/page")).default;
+    const el = await Page({
+      params: Promise.resolve({ id: FINGERPRINT_ORDERS_BY_CREATED_AT_ID }),
+    });
+    render(el);
+    expect(screen.getByText(/backend response looked malformed/i)).toBeInTheDocument();
+  });
+
+  it("happy: recent samples table renders the fixture's sample rows", async () => {
+    const Page = (await import("@/app/queries/[id]/page")).default;
+    const el = await Page({
+      params: Promise.resolve({ id: FINGERPRINT_ORDERS_BY_CREATED_AT_ID }),
+    });
+    render(el);
+    // detailOrdersByCreatedAt has 2 recent_samples fixtures + 1 header row.
+    expect(screen.getAllByRole("row").length).toBe(
+      detailOrdersByCreatedAt.recent_samples.length + 1,
+    );
   });
 });
