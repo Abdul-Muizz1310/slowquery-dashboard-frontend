@@ -68,3 +68,27 @@ jobs:
       # specs (branch-switch, timeline, fingerprints, query-detail, demo)
       # drive the real composed pages CI otherwise never exercises.
       - run: pnpm test:e2e
+
+  # NOTE: this frontend has no deploy job of its own (Vercel auto-deploys main
+  # on push) — this job verifies the demo BACKEND that push also implies is
+  # actually up. It is inert unless the SMOKE_BASE_URL repository variable is
+  # set: tests/smoke.test.ts's describe.skipIf makes zero HTTP requests and
+  # exits 0 when it's unset, so a fork PR or a suspended free-tier service can
+  # never fail CI. The `test` job above deliberately never sets this variable
+  # (it would change that job's collected/passed/skipped counts), so this runs
+  # only that one file in its own push-gated job.
+  smoke:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Post-deploy /health smoke (skipped when SMOKE_BASE_URL is unset)
+        env:
+          SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL }}
+        run: pnpm test --run tests/smoke.test.ts
