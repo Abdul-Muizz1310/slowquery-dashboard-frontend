@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { PageFrame } from "@/components/terminal/PageFrame";
 import { TerminalWindow } from "@/components/terminal/TerminalWindow";
 import { ErrorState } from "@/features/fingerprints/error-state";
@@ -7,6 +8,8 @@ import { getCachedFingerprints } from "@/lib/api/cached";
 import type { ApiError } from "@/lib/api/errors";
 import { ConfigError, HttpError, NetworkError, ParseError, TimeoutError } from "@/lib/api/errors";
 import type { Fingerprint } from "@/lib/api/schemas";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export const dynamic = "force-dynamic";
 

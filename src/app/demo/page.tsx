@@ -12,7 +12,7 @@ import type { Fingerprint } from "@/lib/api/schemas";
 import { DemoPanel } from "./demo-panel";
 
 export const metadata: Metadata = {
-  title: "slowquery dashboard demo",
+  title: "demo",
   robots: { index: false, follow: false },
 };
 

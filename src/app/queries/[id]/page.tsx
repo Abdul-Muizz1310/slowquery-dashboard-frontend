@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageFrame } from "@/components/terminal/PageFrame";
 import { TerminalWindow } from "@/components/terminal/TerminalWindow";
@@ -15,6 +16,12 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+// Titled from the route param alone: a cold backend must never delay the head.
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  return { title: `query ${id.slice(0, 8)}` };
 }
 
 function isApiError(value: unknown): value is ApiError {

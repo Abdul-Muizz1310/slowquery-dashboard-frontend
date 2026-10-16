@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { PageFrame } from "@/components/terminal/PageFrame";
 import { TerminalWindow } from "@/components/terminal/TerminalWindow";
 import { normaliseTop } from "@/features/timeline/buffer";
@@ -5,6 +6,8 @@ import { LiveTimeline } from "@/features/timeline/live-timeline";
 import { TimelineTopN } from "@/features/timeline/timeline-top-n";
 import { getCachedFingerprints } from "@/lib/api/cached";
 import type { Fingerprint } from "@/lib/api/schemas";
+
+export const metadata: Metadata = { title: "live p95 timeline" };
 
 export const dynamic = "force-dynamic";
 

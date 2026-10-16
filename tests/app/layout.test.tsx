@@ -31,9 +31,13 @@ describe("/app/layout.tsx", () => {
     expect(container.querySelector("[data-testid='child']")?.textContent).toBe("hello");
   });
 
-  it("exposes the dashboard metadata title and description", async () => {
-    const { metadata } = await import("@/app/layout");
-    expect(metadata.title).toBe("slowquery dashboard");
+  it("spec 06 case 3 happy: exports the site's root metadata and viewport", async () => {
+    const { metadata, viewport } = await import("@/app/layout");
+    const { SITE } = await import("@/lib/site/config");
+    const { ROOT_VIEWPORT, rootMetadata } = await import("@/lib/site/metadata");
+    expect(metadata).toEqual(rootMetadata(SITE));
+    expect(viewport).toEqual(ROOT_VIEWPORT);
+    expect(metadata.title).toEqual({ default: SITE.title, template: "%s — slowquery" });
     expect(String(metadata.description)).toMatch(/slowquery-detective/i);
   });
 });
