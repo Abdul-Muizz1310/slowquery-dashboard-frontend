@@ -58,3 +58,21 @@ describe("version-locked dependency families", () => {
     ).toBe(1);
   });
 });
+
+/**
+ * TypeScript 7 (the native port) fails `next build` here: dependabot's 5.9 → 7.0
+ * PR went red on the build job. Until Next supports it, dependabot must not
+ * propose a major-7 bump; patch and minor 5.x updates still arrive.
+ */
+describe("dependabot", () => {
+  const config = readFileSync(resolve(repoRoot, ".github/dependabot.yml"), "utf8");
+
+  it("ignores TypeScript 7 and later", () => {
+    const ignore = /-\s*dependency-name:\s*"typescript"\s*\n\s*versions:\s*\[\s*">=7"\s*\]/;
+    expect(config).toMatch(ignore);
+  });
+
+  it("keeps TypeScript on a 5.x range", () => {
+    expect(declared.typescript).toMatch(/^\^5(\.|$)/);
+  });
+});

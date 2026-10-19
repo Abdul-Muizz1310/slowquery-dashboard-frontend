@@ -27,3 +27,9 @@ updates:
         patterns:
           - "playwright"
           - "@playwright/test"
+    # TypeScript 7 (the native port) fails `next build` here (PR #15 went red on
+    # the build job). Keep receiving 5.x updates; skip majors from 7 until Next
+    # supports it. Asserted in tests/toolchain.test.ts.
+    ignore:
+      - dependency-name: "typescript"
+        versions: [">=7"]
