@@ -8,9 +8,9 @@ import { ExplainPlanViewer, PlanNotAvailable } from "@/features/query-detail/exp
 import { validateIdOrNotFound } from "@/features/query-detail/parse";
 import { RecentSamplesTable } from "@/features/query-detail/recent-samples-table";
 import { SuggestionList } from "@/features/query-detail/suggestion-card";
-import { apiClient } from "@/lib/api/client";
 import type { ApiError } from "@/lib/api/errors";
 import { ConfigError, HttpError, NetworkError, ParseError, TimeoutError } from "@/lib/api/errors";
+import { serverApiClient } from "@/lib/server/backend-client";
 
 export const dynamic = "force-dynamic";
 
@@ -39,10 +39,10 @@ export default async function Page({ params }: PageProps) {
   const id = validateIdOrNotFound(rawId);
   if (id === null) notFound();
 
-  let result: Awaited<ReturnType<typeof apiClient.getFingerprint>> | null = null;
+  let result: Awaited<ReturnType<typeof serverApiClient.getFingerprint>> | null = null;
   let error: ApiError | null = null;
   try {
-    result = await apiClient.getFingerprint(id);
+    result = await serverApiClient.getFingerprint(id);
   } catch (err) {
     if (isApiError(err)) {
       error = err;

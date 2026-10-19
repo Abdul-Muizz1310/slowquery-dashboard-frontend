@@ -4,16 +4,8 @@ import type { NextConfig } from "next";
 // fetch) removed, the app loads no third-party code, so the CSP is
 // self-only. `frame-ancestors 'none'` + X-Frame-Options: DENY stop the /demo
 // recording surface (and every other route) from being framed for
-// clickjacking. `connect-src` also allows the backend API host so the
-// browser can reach REST + SSE endpoints.
-const apiOrigin = (() => {
-  try {
-    return new URL(process.env.NEXT_PUBLIC_API_URL ?? "").origin;
-  } catch {
-    return "";
-  }
-})();
-
+// clickjacking. `connect-src` is 'self' too: the browser reaches the backend
+// only through the signing proxy at /api/backend (spec 07), never directly.
 const isDev = process.env.NODE_ENV !== "production";
 
 const contentSecurityPolicy = [
@@ -26,7 +18,7 @@ const contentSecurityPolicy = [
   // does not, so it is only relaxed for the dev server.
   "style-src 'self' 'unsafe-inline'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""}${isDev ? " ws: http://localhost:*" : ""}`,
+  `connect-src 'self'${isDev ? " ws: http://localhost:*" : ""}`,
   "frame-ancestors 'none'",
   "object-src 'none'",
 ]

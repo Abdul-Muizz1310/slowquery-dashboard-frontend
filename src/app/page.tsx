@@ -32,7 +32,7 @@ export default async function Page({ searchParams }: PageProps) {
   let result: Fingerprint[] | null = null;
   let error: ApiError | null = null;
   // Cold-start retry + the short-lived shared cache live in the api layer
-  // (getCachedFingerprints → apiClient.listFingerprints), not here: a
+  // (getCachedFingerprints → serverApiClient.listFingerprints), not here: a
   // genuinely-empty 200 renders instantly, a waking backend is retried once,
   // and concurrent viewers reuse one round-trip.
   try {

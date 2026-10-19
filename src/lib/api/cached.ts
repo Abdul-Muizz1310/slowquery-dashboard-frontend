@@ -9,14 +9,15 @@
  * p95) stays the SSE stream, which is unaffected by this cache.
  */
 
+import "server-only";
 import { unstable_cache } from "next/cache";
-import { apiClient } from "./client";
+import { serverApiClient } from "../server/backend-client";
 import type { Fingerprint } from "./schemas";
 
 const REVALIDATE_SECONDS = 5;
 
 export const getCachedFingerprints: () => Promise<Fingerprint[]> = unstable_cache(
-  () => apiClient.listFingerprints(),
+  () => serverApiClient.listFingerprints(),
   ["slowquery:fingerprints-list"],
   { revalidate: REVALIDATE_SECONDS },
 );

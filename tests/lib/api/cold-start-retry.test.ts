@@ -23,7 +23,8 @@ import { detailOrdersByCreatedAt } from "../../mocks/fixtures/fingerprint-detail
 import { fingerprintsList } from "../../mocks/fixtures/fingerprints";
 import { server } from "../../mocks/server";
 
-const API = "https://slowquery-demo-backend.onrender.com";
+// The browser client calls the same-origin proxy (spec 07 §3), not the backend.
+const API = "http://localhost:3000/api/backend";
 const DETAIL_ID = "c168fc78a2e7d01c";
 const BACKOFF_MS = 800;
 
