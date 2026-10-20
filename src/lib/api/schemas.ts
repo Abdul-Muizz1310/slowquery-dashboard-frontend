@@ -10,6 +10,10 @@
  * Closed enums are deliberate: a backend drift on `kind` or `source`
  * becomes a ParseError, never a silent type hole. Free-text rule names
  * stay open so the library's rule set can grow without breaking us.
+ *
+ * Spec 08: since backend spec 15 the two /_slowquery read routes are
+ * slowquery-detective 0.2's, whose models are a subset of the 0.1-era
+ * shape. Fields only the 0.1-era backend sent are optional, so both parse.
  */
 
 import { z } from "zod";
@@ -27,8 +31,9 @@ export const SuggestionSourceSchema = z.enum(["rules", "llm"]);
 export type SuggestionSource = z.infer<typeof SuggestionSourceSchema>;
 
 export const SuggestionSchema = z.object({
-  id: z.number().int(),
-  fingerprint_id: z.string().min(1),
+  // 0.1-era only (spec 08): the library sends neither.
+  id: z.number().int().optional(),
+  fingerprint_id: z.string().min(1).optional(),
   kind: SuggestionKindSchema,
   source: SuggestionSourceSchema,
   rule: z.string().nullable().optional(),
@@ -44,7 +49,8 @@ export const FingerprintSchema = z.object({
   first_seen: TimestampString,
   last_seen: TimestampString,
   call_count: z.number().int().nonnegative(),
-  total_ms: z.number().int().nonnegative(),
+  // The library sums float durations (spec 08); the 0.1-era backend sent integers.
+  total_ms: z.number().nonnegative(),
   p50_ms: NumericNullable,
   p95_ms: NumericNullable,
   p99_ms: NumericNullable,
@@ -58,20 +64,23 @@ export const FingerprintSchema = z.object({
 export type Fingerprint = z.infer<typeof FingerprintSchema>;
 
 export const ExplainPlanSchema = z.object({
-  fingerprint_id: z.string().min(1),
+  // 0.1-era only (spec 08).
+  fingerprint_id: z.string().min(1).optional(),
   plan_json: z.record(z.string(), z.unknown()),
-  plan_text: z.string(),
+  plan_text: z.string().optional(),
   cost: NumericNullable,
   captured_at: TimestampString,
 });
 export type ExplainPlan = z.infer<typeof ExplainPlanSchema>;
 
 export const QuerySampleSchema = z.object({
-  id: z.number().int(),
-  fingerprint_id: z.string().min(1),
-  params: z.unknown().nullable(),
+  // 0.1-era only (spec 08): the library sends duration, request id and time.
+  id: z.number().int().optional(),
+  fingerprint_id: z.string().min(1).optional(),
+  params: z.unknown().nullable().optional(),
   duration_ms: z.number(),
-  rows: z.number().int().nullable(),
+  rows: z.number().int().nullable().optional(),
+  request_id: z.string().nullable().optional(),
   sampled_at: TimestampString,
 });
 export type QuerySample = z.infer<typeof QuerySampleSchema>;

@@ -34,8 +34,9 @@ export function RecentSamplesTable({ samples }: RecentSamplesTableProps) {
         </tr>
       </thead>
       <tbody>
-        {sorted.map((s) => (
-          <tr key={s.id} className="border-b border-border">
+        {sorted.map((s, index) => (
+          // The library's samples carry no id (spec 08).
+          <tr key={s.id ?? `${s.sampled_at}-${index}`} className="border-b border-border">
             <td className="px-3 py-1.5 font-mono text-fg-muted">{s.sampled_at}</td>
             <td className="px-3 py-1.5 text-right tabular-nums">{s.duration_ms.toFixed(0)}ms</td>
             <td className="px-3 py-1.5 text-right tabular-nums">{s.rows ?? "—"}</td>

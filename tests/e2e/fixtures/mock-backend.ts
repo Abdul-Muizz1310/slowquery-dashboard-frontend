@@ -1,7 +1,6 @@
 import { createPublicKey, type KeyObject, verify } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { detailsById } from "../../mocks/fixtures/fingerprint-detail";
-import { fingerprintsList } from "../../mocks/fixtures/fingerprints";
+import { libraryDetailsById, libraryFingerprintsList } from "../../mocks/fixtures/library-shapes";
 import { tickOrdersCreatedAt } from "../../mocks/fixtures/stream-events";
 
 /**
@@ -12,8 +11,10 @@ import { tickOrdersCreatedAt } from "../../mocks/fixtures/stream-events";
  * backend checks a frontend-key token: EdDSA, the signature against the
  * throwaway public key, iss "slowquery-frontend", aud the string "slowquery",
  * role "frontend", exp/iat with 10 s leeway and a lifetime of at most 300 s.
- * Anything else gets 401. It records what it received, and holds the SSE
- * stream open after its first event until the test releases it.
+ * Anything else gets 401. Its two read routes answer in slowquery-detective
+ * 0.2's shapes, as the backend's now do (spec 08). It records what it
+ * received, and holds the SSE stream open after its first event until the
+ * test releases it.
  *
  * Control routes, on this server's own origin (the browser never sees it):
  *   GET  /__control/requests        → every recorded request
@@ -169,11 +170,11 @@ export async function startMockBackend(opts: {
     }
 
     if (url.pathname === "/_slowquery/queries" && method === "GET") {
-      return json(res, 200, fingerprintsList);
+      return json(res, 200, libraryFingerprintsList);
     }
     const detail = url.pathname.match(/^\/_slowquery\/queries\/([a-f0-9]{1,16})$/);
     if (detail && method === "GET") {
-      const body = detailsById[detail[1]];
+      const body = libraryDetailsById[detail[1]];
       return body ? json(res, 200, body) : json(res, 404, { detail: "not found" });
     }
     if (url.pathname === "/_slowquery/api/stream" && method === "GET") return stream(req, res);

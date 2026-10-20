@@ -122,14 +122,20 @@ export function SuggestionList({ suggestions }: SuggestionListProps) {
       </div>
     );
   }
-  const ordered = [...suggestions].sort((a, b) => {
-    if (a.source === b.source) return a.id - b.id;
-    return a.source === "rules" ? -1 : 1;
-  });
+  // Rules first; within a source by id when the 0.1-era backend sent one,
+  // else in list order (the library sends no id, spec 08).
+  const ordered = suggestions
+    .map((suggestion, position) => ({ suggestion, position }))
+    .sort((a, b) => {
+      if (a.suggestion.source !== b.suggestion.source) {
+        return a.suggestion.source === "rules" ? -1 : 1;
+      }
+      return (a.suggestion.id ?? a.position) - (b.suggestion.id ?? b.position);
+    });
   return (
     <div>
-      {ordered.map((s) => (
-        <SuggestionCard key={s.id} suggestion={s} />
+      {ordered.map(({ suggestion, position }) => (
+        <SuggestionCard key={suggestion.id ?? `position-${position}`} suggestion={suggestion} />
       ))}
     </div>
   );

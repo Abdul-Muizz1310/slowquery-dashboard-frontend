@@ -54,10 +54,14 @@ export function RuleBadges({ suggestions }: RuleBadgesProps) {
   });
   return (
     <div className="flex gap-1 flex-wrap">
-      {ordered.map((s) => {
+      {ordered.map((s, index) => {
         const severity = severityFor(s);
         return (
-          <span key={s.id} className={SEVERITY_CLASSES[severity]}>
+          // The library's suggestions carry no id (spec 08); the position is stable here.
+          <span
+            key={s.id ?? `${s.kind}-${s.source}-${index}`}
+            className={SEVERITY_CLASSES[severity]}
+          >
             {labelFor(s)}
           </span>
         );
