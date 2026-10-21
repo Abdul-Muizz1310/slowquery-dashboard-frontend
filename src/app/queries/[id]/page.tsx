@@ -11,6 +11,8 @@ import { SuggestionList } from "@/features/query-detail/suggestion-card";
 import type { ApiError } from "@/lib/api/errors";
 import { ConfigError, HttpError, NetworkError, ParseError, TimeoutError } from "@/lib/api/errors";
 import { serverApiClient } from "@/lib/server/backend-client";
+import { SITE } from "@/lib/site/config";
+import { pageMetadata } from "@/lib/site/metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -18,10 +20,14 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// Titled from the route param alone: a cold backend must never delay the head.
+// Titled and described from the route param alone: a cold backend must never delay the head.
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  return { title: `query ${id.slice(0, 8)}` };
+  const short = id.slice(0, 8);
+  return pageMetadata(SITE, `/queries/${encodeURIComponent(id)}`, {
+    title: `query ${short}`,
+    description: `Postgres query fingerprint ${short}: its canonical SQL, p50/p95/p99 timings, EXPLAIN plan and the suggested fix, caught live by slowquery-detective.`,
+  });
 }
 
 function isApiError(value: unknown): value is ApiError {

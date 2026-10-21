@@ -8,6 +8,8 @@ import { getCachedFingerprints } from "@/lib/api/cached";
 import type { ApiError } from "@/lib/api/errors";
 import { ConfigError, HttpError, NetworkError, ParseError, TimeoutError } from "@/lib/api/errors";
 import type { Fingerprint } from "@/lib/api/schemas";
+import { SITE } from "@/lib/site/config";
+import { StructuredData } from "@/lib/site/structured-data";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -61,6 +63,7 @@ export default async function Page({ searchParams }: PageProps) {
         </>
       }
     >
+      <StructuredData site={SITE} />
       <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-1.5">
           <h1 className="font-mono text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">

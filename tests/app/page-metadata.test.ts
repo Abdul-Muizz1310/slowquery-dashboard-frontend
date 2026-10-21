@@ -35,26 +35,48 @@ describe("spec 06 — page titles", () => {
     expect((await import("@/app/page")).metadata).toEqual({ alternates: { canonical: "/" } });
   });
 
-  it("case 11 happy: /timeline is titled by its h1", async () => {
-    expect((await import("@/app/timeline/page")).metadata.title).toBe("live p95 timeline");
+  it("case 11 happy: /timeline is titled by its h1, described and canonical", async () => {
+    expect((await import("@/app/timeline/page")).metadata).toEqual({
+      title: "live p95 timeline",
+      description:
+        "Real-time p95 latency for the slowest Postgres query fingerprints, streamed over SSE from the slowquery-detective drainer. Watch the top 3, 5 or 10.",
+      alternates: { canonical: "/timeline" },
+    });
   });
 
   it("case 11 happy: /demo is titled by its nav label, without the old site suffix", async () => {
     expect((await import("@/app/demo/page")).metadata.title).toBe("demo");
   });
 
-  it("case 11 happy: /queries/[id] is titled by the first 8 characters of the id", async () => {
-    expect((await queryMetadata("c168fc78a2e7d01c")).title).toBe("query c168fc78");
+  it("case 11 happy: /queries/[id] is titled and described from the id, and canonical", async () => {
+    expect(await queryMetadata("c168fc78a2e7d01c")).toEqual({
+      title: "query c168fc78",
+      description:
+        "Postgres query fingerprint c168fc78: its canonical SQL, p50/p95/p99 timings, EXPLAIN plan and the suggested fix, caught live by slowquery-detective.",
+      alternates: { canonical: "/queries/c168fc78a2e7d01c" },
+    });
   });
 });
 
 describe("spec 06 — page metadata never overrides the root's share tags", () => {
-  it("case 15 edge: no page sets openGraph or twitter; only the home page sets alternates", async () => {
-    for (const [route, metadata] of Object.entries(await pages())) {
+  it("case 15 edge: no page sets openGraph or twitter, and the noindex /demo sets no canonical", async () => {
+    const all = await pages();
+    for (const [route, metadata] of Object.entries(all)) {
       expect(metadata, route).not.toHaveProperty("openGraph");
       expect(metadata, route).not.toHaveProperty("twitter");
-      if (route !== "/") expect(metadata, route).not.toHaveProperty("alternates");
     }
+    expect(all["/demo"]).not.toHaveProperty("alternates");
+  });
+
+  it("case 15 edge: every sitemap route names itself as canonical, each with its own description", async () => {
+    const all = await pages();
+    for (const route of SITE.routes.sitemap) {
+      expect(all[route]?.alternates?.canonical, route).toBe(route);
+    }
+    const descriptions = SITE.routes.sitemap.map(
+      (route) => all[route]?.description ?? SITE.description,
+    );
+    expect(new Set(descriptions).size).toBe(descriptions.length);
   });
 });
 

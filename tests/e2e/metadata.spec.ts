@@ -48,6 +48,31 @@ test("spec 06 e2e — /timeline's own title flows into og:title (case 22)", asyn
   expect(await content(page, 'meta[property="og:title"]')).toBe("live p95 timeline — slowquery");
 });
 
+test("spec 06 e2e — the home page carries the site's structured data (case 28)", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const scripts = page.locator('script[type="application/ld+json"]');
+  await expect(scripts).toHaveCount(1);
+  const graph = JSON.parse((await scripts.textContent()) ?? "")["@graph"];
+  expect(graph.map((node: { "@type": string }) => node["@type"])).toEqual([
+    "WebSite",
+    "WebApplication",
+    "Person",
+  ]);
+  expect(graph[0]).toMatchObject({ url: `${SITE.url}/`, name: SITE.name });
+});
+
+test("spec 06 e2e — /timeline describes itself and names itself as canonical (case 28)", async ({
+  page,
+}) => {
+  await page.goto("/timeline");
+  const description = await content(page, 'meta[name="description"]');
+  expect(description).toMatch(/^Real-time p95 latency/);
+  expect(await content(page, 'meta[property="og:description"]')).toBe(description);
+  await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute("href", /\/timeline$/);
+});
+
 test("spec 06 e2e — the home page can be indexed (case 23)", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator('head meta[name="robots"]')).toHaveCount(0);

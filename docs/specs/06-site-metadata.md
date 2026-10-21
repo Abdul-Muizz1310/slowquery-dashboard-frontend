@@ -22,15 +22,17 @@ Decide what a browser tab, a search result, a home-screen install and a link pre
   | Route | Title | Source |
   |---|---|---|
   | `/` | the default title, plus `alternates.canonical: "/"` | — |
-  | `/timeline` | `live p95 timeline` | the page's h1 |
+  | `/timeline` | `live p95 timeline`, described as `Real-time p95 latency for the slowest Postgres query fingerprints, streamed over SSE from the slowquery-detective drainer. Watch the top 3, 5 or 10.`, canonical `/timeline` | the page's h1 |
   | `/demo` | `demo` (was `slowquery dashboard demo`) | the nav label |
-  | `/queries/[id]` | `query <first 8 chars of the id>` via `generateMetadata` | the route param, no fetch |
+  | `/queries/[id]` | `query <first 8 chars of the id>` via `generateMetadata`, described as `Postgres query fingerprint <first 8>: its canonical SQL, p50/p95/p99 timings, EXPLAIN plan and the suggested fix, caught live by slowquery-detective.`, canonical `/queries/<id>` | the route param, no fetch |
+
+- Structured data (2026-10-21): `/` renders one `<script type="application/ld+json">` (`src/lib/site/structured-data.tsx`): a schema.org `@graph` of a `WebSite` (`<origin>/#website`: url, name, description, `inLanguage: "en"`, the author as publisher), a `WebApplication` (`<origin>/#app`: url, name, description, `applicationCategory: "DeveloperApplication"`, `operatingSystem: "Any"`, `isAccessibleForFree: true`, part of the website, by the author) and the author as a `Person` (`https://github.com/Abdul-Muizz1310#person`), all from the config. Search engines read the site name from the `WebSite` node, so a result says `slowquery`, not `vercel.app`. No rating, review or price is claimed. Every `<` in the JSON is escaped as `\u003c`, so no value can close the script tag.
 
 ## Invariants
 
 1. One config, parsed once at module load. `defineSite` rejects: a `url` that is not a URL, is not `https:`, or is not a bare origin (a path or a trailing slash); a host on the workspace's never-use list (`knowledge/infrastructure/infra-never-use-hosts.md` — strangers own those hosts); a name outside 1–12 characters (it doubles as the manifest's `short_name`); a title outside 1–70; a description outside 50–160 (search results cut longer ones; both bounds inclusive); an accent that is not `#rrggbb`; a highlight that is empty or not in the headline; a route that does not start with `/`; a sitemap route under a disallowed prefix.
 2. `metadataBase` is the production origin, so every image URL in the head is absolute on it, whatever host serves the page.
-3. The root sets no Open Graph `title`, `description` or `url` and no `alternates`: Next fills `og:title`/`og:description` from each page's own, and a root `og:url` or canonical would claim every page is the home page. Only the home page sets a canonical.
+3. The root sets no Open Graph `title`, `description` or `url` and no `alternates`: Next fills `og:title`/`og:description` from each page's own, and a root `og:url` or canonical would claim every page is the home page. Every indexable page names itself as canonical (the home page `/`); `/demo`, which is noindex, sets none. Every indexable page other than `/` describes itself through `pageMetadata(site, route, { title, description })` (`src/lib/site/metadata.ts`, 2026-10-21), which returns the title, the description and the route as canonical and throws a `SiteConfigError` on an empty title, a title the template takes past 70 characters, or a description outside 50–160, so bad copy fails the build. No two sitemap routes share a description.
 4. No page other than the root sets `openGraph` or `twitter` — a page-level `openGraph` replaces the root one and drops the share image. Next fills the Twitter title, description and image from Open Graph, so there is no `twitter-image`.
 5. `theme-color` is the page background `#0a0a0a` and `color-scheme` is `dark`.
 6. `robots.txt` allows `/`, disallows nothing (the dashboard has no machine endpoints of its own) and names the sitemap on the origin. Link-preview bots obey robots.txt, so a page that should stay out of search sets `robots: { index: false }` instead. `/demo` keeps spec 05's `noindex, nofollow` (invariant 6 there); `/`, `/timeline` and `/queries/[id]` are indexable — they show demo-backend data, not anyone's upload.
@@ -53,14 +55,14 @@ Decide what a browser tab, a search result, a home-screen install and a link pre
 8. The sitemap lists `/` and `/timeline` as absolute URLs on the origin, once each. It never lists a noindex page, so `/demo` (noindex per spec 05) is left out.
 9. `icon.svg` draws the glyph in the accent; `favicon.ico` holds 16, 32 and 48 px frames; `apple-icon.png` is 180×180.
 10. The share card is 1200×630, its alt text is `slowquery — catch slow queries.`, it renders the name, the `//` comment, `slow` in the accent and the live host, and its assets load both Geist Mono weights and the icon as a data URI.
-11. Page titles: `/` sets only `alternates.canonical: "/"`; `/timeline` is `live p95 timeline`; `/demo` is `demo`; `/queries/c168fc78a2e7d01c` resolves to `query c168fc78`.
+11. Page metadata: `/` sets only `alternates.canonical: "/"`; `/timeline` is `live p95 timeline` with its description and canonical; `/demo` is `demo`; `/queries/c168fc78a2e7d01c` resolves to `query c168fc78` with its description and canonical `/queries/c168fc78a2e7d01c`.
 
 ### Edge
 
 12. A description of exactly 160 characters is accepted (the real one is that long); 161 is rejected. A title of exactly 70 is accepted.
 13. Headline layout: words are split with the highlight marked but not its punctuation; a highlight spanning words marks each; segments are keyed by offset; the greedy wrap breaks at the column; the size steps from 96 to 88 exactly at the two-line boundary; nothing fitting falls back to 48; the real headline sets at 96.
 14. `rgba("#f97316", 0.25)` is `rgba(249, 115, 22, 0.25)`, and hex case does not matter.
-15. No page sets `openGraph` or `twitter`, and only the home page sets `alternates`.
+15. No page sets `openGraph` or `twitter`; `/demo` sets no `alternates`; every sitemap route names itself as canonical, and no two of their descriptions are equal.
 
 ### Failure
 
@@ -79,6 +81,13 @@ Decide what a browser tab, a search result, a home-screen install and a link pre
 22. `/timeline`'s own title flows into `og:title` as `live p95 timeline — slowquery`.
 23. The home page has no robots meta.
 24. Every metadata route answers 200 with its content type: `/opengraph-image` and `/apple-icon.png` and `/icon-512.png` PNG, `/icon.svg` SVG, `/favicon.ico` an icon, `/manifest.webmanifest` `application/manifest+json`, `/robots.txt` `text/plain`, `/sitemap.xml` `application/xml`.
+
+### Indexable pages and structured data (2026-10-21)
+
+25. `pageMetadata` returns the title, description and canonical; it accepts a title the template takes to exactly 70 characters and descriptions of exactly 50 and 160.
+26. `pageMetadata` rejects an empty title, a title the template takes past 70 characters, and a description under 50 or over 160, with a `SiteConfigError` naming the page and the reason.
+27. The structured data: the graph above, derived from the config; its serialisation escapes `<` and parses back to the same value; it renders as one `application/ld+json` script.
+28. (E2E) `/` carries exactly one structured-data script whose `WebSite` node names the site on the production origin; `/timeline` carries its own description in `description` and `og:description`, and a canonical ending in `/timeline`.
 
 ## Acceptance criteria
 

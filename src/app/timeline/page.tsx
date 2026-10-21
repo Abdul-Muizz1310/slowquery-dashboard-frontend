@@ -6,8 +6,14 @@ import { LiveTimeline } from "@/features/timeline/live-timeline";
 import { TimelineTopN } from "@/features/timeline/timeline-top-n";
 import { getCachedFingerprints } from "@/lib/api/cached";
 import type { Fingerprint } from "@/lib/api/schemas";
+import { SITE } from "@/lib/site/config";
+import { pageMetadata } from "@/lib/site/metadata";
 
-export const metadata: Metadata = { title: "live p95 timeline" };
+export const metadata: Metadata = pageMetadata(SITE, "/timeline", {
+  title: "live p95 timeline",
+  description:
+    "Real-time p95 latency for the slowest Postgres query fingerprints, streamed over SSE from the slowquery-detective drainer. Watch the top 3, 5 or 10.",
+});
 
 export const dynamic = "force-dynamic";
 

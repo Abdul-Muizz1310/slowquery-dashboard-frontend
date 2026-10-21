@@ -11,7 +11,7 @@
 ![tailwind](https://img.shields.io/badge/Tailwind-v4-06b6d4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![zod](https://img.shields.io/badge/Zod-boundaries-3068b7?style=flat-square)
 ![biome](https://img.shields.io/badge/lint-Biome%202-60a5fa?style=flat-square)
-![tests](https://img.shields.io/badge/tests-420%20vitest-6e9f18?style=flat-square)
+![tests](https://img.shields.io/badge/tests-435%20vitest-6e9f18?style=flat-square)
 ![vercel](https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white)
 [![ci](https://github.com/Abdul-Muizz1310/slowquery-dashboard-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/Abdul-Muizz1310/slowquery-dashboard-frontend/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
@@ -57,7 +57,7 @@ The demo's punchline: click "apply suggestion" and watch the live p95 timeline d
 - 🎬 Chromeless `/demo` view for README gifs
 - 🛡️ Zod validation at every API boundary, accepting both the 0.1-era shapes and slowquery-detective 0.2's `QueryRow` / `QueryDetail`, which the backend's `/_slowquery` read routes now return ([spec 08](docs/specs/08-library-response-shapes.md))
 - 🔐 Signed backend proxy: the browser only ever calls `/api/backend/…` on its own origin; the server mints a 60-second Ed25519 platform token per upstream call (contract v2, `aud "slowquery"`), streams SSE through unbuffered, and forwards only an allowlist of six calls ([spec 07](docs/specs/07-backend-proxy.md))
-- ✅ 420 vitest tests across 43 test files (incl. composed-path integration tests; the env-gated live smoke test skips without `SMOKE_BASE_URL`) — red-first TDD, 96.02% line coverage, 100% on the proxy modules
+- ✅ 435 vitest tests across 44 test files (incl. composed-path integration tests; the env-gated live smoke test skips without `SMOKE_BASE_URL`) — red-first TDD, 96.11% line coverage, 100% on the proxy modules
 
 ---
 
@@ -170,7 +170,7 @@ src/
 | **Code viewer** | Read-only `<pre>` (no editor dependency — keeps the detail page light) |
 | **Validation** | Zod at all backend/API boundaries |
 | **State** | Zustand (timeline store) |
-| **Testing** | Vitest 4 + Testing Library + jsdom (420 tests, 96.02% line coverage) · Playwright (E2E) |
+| **Testing** | Vitest 4 + Testing Library + jsdom (435 tests, 96.11% line coverage) · Playwright (E2E) |
 | **Lint / Format** | Biome 2 |
 | **Package manager** | pnpm 10, Node 24 |
 | **Hosting** | Vercel Hobby, auto-deploy on push to main |
@@ -216,7 +216,7 @@ pnpm test:e2e                # Playwright chromium
 
 | Metric | Value |
 |---|---|
-| **Unit tests** | 420 tests across 43 files (Vitest + jsdom/node; 1 env-gated smoke test skips by default) |
+| **Unit tests** | 435 tests across 44 files (Vitest + jsdom/node; 1 env-gated smoke test skips by default) |
 | **Line coverage** | **96.02%** (100% floors on `src/lib/server/**` and `src/app/api/**`) |
 | **E2E** | Playwright (chromium only), against a local mock backend that verifies every token with a throwaway key ([spec 07 §5](docs/specs/07-backend-proxy.md)) |
 | **Methodology** | Red-first spec-TDD. Every spec in `docs/specs/` with enumerated test cases before code ships. |
