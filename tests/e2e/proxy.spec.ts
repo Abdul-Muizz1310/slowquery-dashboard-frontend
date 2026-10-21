@@ -55,13 +55,19 @@ test("P18 server pages, the live stream and a branch switch all go out signed", 
   await page.getByRole("button", { name: /apply on fast branch/i }).click();
   await expect(page.getByTestId("branch-indicator")).toContainText(/fast/i);
 
-  const seen = (await received()).slice(before);
+  const all = await received();
+  const seen = all.slice(before);
   const paths = seen.map((r) => `${r.method} ${r.path}`);
-  expect(paths).toContain("GET /_slowquery/queries");
   expect(paths).toContain("GET /_slowquery/api/stream");
   expect(paths).toContain("POST /branches/switch");
 
-  for (const r of seen) {
+  // The fingerprint list is cached for 5 s (spec 00), so `/` may render from a fill an earlier test
+  // caused. Only the server client fills it, so the server path's signed call is in the mock's log
+  // either way: check every one, not just those since this test began.
+  const listCalls = all.filter((r) => r.method === "GET" && r.path === "/_slowquery/queries");
+  expect(listCalls.length).toBeGreaterThan(0);
+
+  for (const r of new Set([...seen, ...listCalls])) {
     expect(r.check, `${r.method} ${r.path}`).toMatchObject({ valid: true });
     if (r.check.valid) {
       expect(r.check.claims).toMatchObject({

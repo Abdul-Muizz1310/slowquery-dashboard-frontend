@@ -148,7 +148,8 @@ Unit: `tests/lib/server/*.test.ts`, `tests/app/api/backend/route.test.ts` (Node 
 - **P16** the browser client's three calls go to `/api/backend/…` on the page's origin and carry no token.
 - **P17** the server client calls the backend origin with an `x-platform-token` that verifies, a fresh one
   per call.
-- **P18** (E2E, composed, no browser mocks) `/` lists the mock's fingerprints (server path, signed);
+- **P18** (E2E, composed, no browser mocks) `/` lists the mock's fingerprints (server path, signed; the
+  list is cached for 5 s, spec 00, so its signed call may come from an earlier test's fill);
   `/timeline` shows the first live tick while the mock holds the stream open; the apply button switches the
   branch through the proxy; every request the mock saw carried a valid token (contract-v2 claims), none a
   cookie or `authorization`, and the browser-originated ones the visitor's `x-forwarded-for`.
