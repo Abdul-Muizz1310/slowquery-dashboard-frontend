@@ -7,7 +7,8 @@ import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "../../mocks/server";
 
-const API = "https://slowquery-demo-backend.onrender.com";
+// The browser client calls the same-origin proxy (spec 07 §3), not the backend.
+const API = "http://localhost:3000/api/backend";
 
 describe("spec 00 — apiClient", () => {
   it("case 2 happy: listFingerprints against empty [] resolves to []", async () => {

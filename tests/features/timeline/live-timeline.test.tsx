@@ -10,7 +10,8 @@ import { fingerprintsList } from "../../mocks/fixtures/fingerprints";
 import { branchSwitchedToFast, tickOrdersCreatedAt } from "../../mocks/fixtures/stream-events";
 import { server } from "../../mocks/server";
 
-const API = "https://slowquery-demo-backend.onrender.com";
+// The browser client calls the same-origin proxy (spec 07 §3), not the backend.
+const API = "http://localhost:3000/api/backend";
 
 afterEach(cleanup);
 

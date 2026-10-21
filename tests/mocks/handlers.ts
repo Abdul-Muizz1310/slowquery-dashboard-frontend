@@ -1,8 +1,9 @@
 /**
  * MSW request handlers covering every slowquery-demo-backend endpoint
- * the dashboard consumes. The base URL is read from
- * process.env.NEXT_PUBLIC_API_URL which tests/setup.ts pins to the
- * Render URL before MSW boots.
+ * the dashboard consumes, twice (spec 07): at the backend's URL, where the
+ * RSC pages' signed server client calls (process.env.NEXT_PUBLIC_API_URL,
+ * pinned by tests/setup.ts), and at the same-origin proxy prefix
+ * `PROXY` (jsdom's origin + /api/backend), where the browser client calls.
  */
 
 import { HttpResponse, http } from "msw";
@@ -17,6 +18,8 @@ import {
 import { switchToFastOk, switchToSlowOk } from "./fixtures/switch-response";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "https://slowquery-demo-backend.onrender.com";
+/** The browser client's base: the page's own origin under /api/backend. */
+export const PROXY = "http://localhost:3000/api/backend";
 
 function sseFrame(payload: string): string {
   return `data: ${payload}\n\n`;
@@ -32,7 +35,7 @@ const sseFrames = [
   sseFrame(JSON.stringify(branchSwitchedToFast)),
 ];
 
-export const handlers = [
+const handlersFor = (API: string) => [
   http.get(`${API}/_slowquery/api/stream`, () => {
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -75,4 +78,34 @@ export const handlers = [
     }
     return HttpResponse.json({ detail: "invalid target" }, { status: 422 });
   }),
+];
+
+/**
+ * Spec 07 guards, ahead of the routes (a resolver that returns nothing falls
+ * through): the backend answers 401 to a call without a compact-JWS
+ * X-Platform-Token, as the real one does, and the proxy refuses a browser
+ * call that carries one, since only the proxy signs. Every composed page and
+ * feature test therefore proves its calls took the right path.
+ */
+const isCompactJws = (value: string | null) => value !== null && value.split(".").length === 3;
+
+const backendRequiresToken = http.all(`${API}/*`, ({ request }) => {
+  if (!isCompactJws(request.headers.get("x-platform-token"))) {
+    return HttpResponse.json({ detail: "missing_platform_token" }, { status: 401 });
+  }
+  return undefined;
+});
+
+const proxyRefusesBrowserTokens = http.all(`${PROXY}/*`, ({ request }) => {
+  if (request.headers.has("x-platform-token")) {
+    return HttpResponse.json({ error: "the browser never signs" }, { status: 400 });
+  }
+  return undefined;
+});
+
+export const handlers = [
+  backendRequiresToken,
+  proxyRefusesBrowserTokens,
+  ...handlersFor(API),
+  ...handlersFor(PROXY),
 ];

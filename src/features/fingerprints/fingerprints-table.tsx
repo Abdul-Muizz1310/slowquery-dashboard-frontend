@@ -123,7 +123,9 @@ export function FingerprintsTable({
               <td className="px-3 py-2 text-right tabular-nums text-foreground">
                 {formatCount(fp.call_count)}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums text-foreground">{fp.total_ms}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-foreground">
+                {Math.round(fp.total_ms)}
+              </td>
               <td className="px-3 py-2 text-right tabular-nums text-fg-muted">
                 {formatMsCell(fp.p50_ms)}
               </td>

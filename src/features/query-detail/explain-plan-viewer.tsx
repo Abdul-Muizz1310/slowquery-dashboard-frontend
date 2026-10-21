@@ -63,15 +63,27 @@ function renderNode(node: PlanNode, depth: number): React.ReactElement {
   );
 }
 
+/**
+ * The root plan node: the object itself, or its `Plan` member when the plan
+ * is EXPLAIN (FORMAT JSON)'s top-level object, which is how
+ * slowquery-detective 0.2 stores it (spec 08).
+ */
+function rootNode(planJson: Record<string, unknown>): PlanNode | null {
+  const wrapped: unknown = planJson.Plan;
+  if (isPlanNode(planJson)) return planJson;
+  return isPlanNode(wrapped) ? wrapped : null;
+}
+
 export function ExplainPlanViewer({ plan }: ExplainPlanViewerProps) {
-  if (!isPlanNode(plan.plan_json)) {
+  const root = rootNode(plan.plan_json);
+  if (root === null) {
     return (
       <pre className="m-0 p-3 font-mono text-xs text-foreground bg-surface/50 rounded border border-border overflow-x-auto">
         {JSON.stringify(plan.plan_json, null, 2)}
       </pre>
     );
   }
-  return <div className="text-sm font-mono">{renderNode(plan.plan_json, 0)}</div>;
+  return <div className="text-sm font-mono">{renderNode(root, 0)}</div>;
 }
 
 export function PlanNotAvailable() {

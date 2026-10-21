@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest";
+import { generateKeyPairSync } from "node:crypto";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { server } from "./mocks/server";
 
@@ -14,6 +15,12 @@ vi.mock("next/cache", () => ({
 // evaluates — env.ts throws at import time on missing values.
 process.env.NEXT_PUBLIC_API_URL ??= "https://slowquery-demo-backend.onrender.com";
 process.env.NEXT_PUBLIC_SITE_URL ??= "http://localhost:3000";
+
+// The RSC pages sign their backend calls (spec 07 §3). A throwaway Ed25519 key,
+// made per run, lets them; it is never a real key.
+process.env.SLOWQUERY_FRONTEND_SIGNING_KEY_PRIVATE ??= generateKeyPairSync("ed25519")
+  .privateKey.export({ format: "der", type: "pkcs8" })
+  .toString("base64");
 
 // MSW lifecycle. `error` is deliberately strict — any unmocked request
 // becomes a hard failure so tests can't silently hit the real backend.

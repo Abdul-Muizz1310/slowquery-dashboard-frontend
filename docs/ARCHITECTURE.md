@@ -9,10 +9,9 @@ flowchart TD
     Browser[Browser] --> Vercel[Vercel Edge Network]
     Vercel --> Next[Next.js 16 App Router<br>RSC + Client Components]
 
-    Next -- "GET /queries" --> API[slowquery-demo-backend<br>Render]
-    Next -- "GET /queries/:id" --> API
-    Next -- "GET /api/stream (SSE)" --> API
-    Next -- "POST /branches/switch" --> API
+    Next -- "RSC: GET /_slowquery/queries[/:id]<br>signed X-Platform-Token" --> API[slowquery-demo-backend<br>Render]
+    Browser -- "/api/backend/... (same origin)" --> Proxy[api/backend proxy<br>allowlist + fresh token]
+    Proxy -- "GET /_slowquery/api/stream (SSE, unbuffered)<br>POST /branches/switch" --> API
 
     API --> Slow[(Neon: slowquery branch<br>no indexes)]
     API --> Fast[(Neon: slowquery-fast branch<br>optimized indexes)]
@@ -21,6 +20,10 @@ flowchart TD
     style Slow fill:#12121a,stroke:#a78bfa,color:#fafafa
     style Fast fill:#12121a,stroke:#a78bfa,color:#fafafa
 ```
+
+Platform contract v2 (spec 07, DR-0030): the backend demands a token on every route the dashboard
+uses. The browser never calls the backend's origin; the server signs every call with
+`SLOWQUERY_FRONTEND_SIGNING_KEY_PRIVATE`.
 
 ## Component map
 
@@ -65,7 +68,7 @@ sequenceDiagram
     participant Chart as Recharts
 
     B->>Hook: Mount LiveTimeline
-    Hook->>API: EventSource /api/stream
+    Hook->>API: fetch /api/backend/_slowquery/api/stream (the proxy signs and pipes it)
     API-->>Hook: data: {fingerprint, p95, ts}
     Hook->>Hook: Buffer events (100ms window)
     Hook->>Store: Batch append to timeline store

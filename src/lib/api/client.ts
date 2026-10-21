@@ -1,8 +1,10 @@
 /**
- * Spec 00 — typed API client.
+ * Spec 00 — typed API client; spec 07 — where its calls go.
  *
- * Every public method goes through the `request()` helper which:
- *   1. constructs the URL from env.apiUrl (no string concat from user
+ * `createApiClient(transport)` builds the client over a transport that says
+ * where a backend path lives and which headers to add. Every method goes
+ * through the `request()` helper which:
+ *   1. constructs the URL from the transport (no string concat from user
  *      input)
  *   2. applies an AbortSignal.timeout (default 10s, overridable per
  *      call)
@@ -10,11 +12,15 @@
  *   4. validates against the response Zod schema
  *   5. maps every failure into the typed error union from ./errors
  *
+ * Two clients exist. `apiClient` (here) is the browser's: every call goes to
+ * the page's own origin under `/api/backend`, where the server-side proxy
+ * signs and forwards it. `serverApiClient` (`lib/server/backend-client.ts`)
+ * is the RSC pages': it calls the backend directly with a fresh token.
+ *
  * Callers see typed domain objects, never raw Response or unknown.
  */
 
-import { env } from "../env";
-import { HttpError, NetworkError, ParseError, TimeoutError } from "./errors";
+import { ConfigError, HttpError, NetworkError, ParseError, TimeoutError } from "./errors";
 import {
   type BranchName,
   type Fingerprint,
@@ -62,6 +68,31 @@ export async function withColdStartRetry<T>(op: () => Promise<T>): Promise<T> {
   }
 }
 
+/**
+ * Where a backend path goes and what each call adds. `resolve` and `headers`
+ * run per call (a token is minted fresh every time) and may throw
+ * `ConfigError`, which aborts the call before anything is sent.
+ */
+export interface ApiTransport {
+  resolve(path: string): URL;
+  headers(): Record<string, string>;
+}
+
+/** The browser's proxy prefix on the page's own origin (spec 07 §3). */
+export const BROWSER_PROXY_PREFIX = "/api/backend";
+
+export const browserTransport: ApiTransport = {
+  resolve(path) {
+    if (typeof window === "undefined") {
+      throw new ConfigError("the browser api client was used outside a browser");
+    }
+    return new URL(`${BROWSER_PROXY_PREFIX}${path}`, window.location.origin);
+  },
+  headers() {
+    return {};
+  },
+};
+
 interface RequestOptions {
   method?: "GET" | "POST";
   body?: unknown;
@@ -69,17 +100,19 @@ interface RequestOptions {
 }
 
 async function request<T>(
+  transport: ApiTransport,
   path: string,
   schema: { parse: (input: unknown) => T },
   options: RequestOptions = {},
 ): Promise<T> {
   const { method = "GET", body, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
-  const url = new URL(path, env.apiUrl);
+  const url = transport.resolve(path);
   const init: RequestInit = {
     method,
     headers: {
       Accept: "application/json",
       ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...transport.headers(),
     },
     signal: AbortSignal.timeout(timeoutMs),
   };
@@ -134,13 +167,16 @@ async function request<T>(
   }
 }
 
-async function* streamFingerprints(signal: AbortSignal): AsyncIterable<StreamEvent> {
+async function* streamFingerprints(
+  transport: ApiTransport,
+  signal: AbortSignal,
+): AsyncIterable<StreamEvent> {
   if (signal.aborted) return;
-  const url = new URL("/_slowquery/api/stream", env.apiUrl);
+  const url = transport.resolve("/_slowquery/api/stream");
   let response: Response;
   try {
     response = await fetch(url, {
-      headers: { Accept: "text/event-stream" },
+      headers: { Accept: "text/event-stream", ...transport.headers() },
       signal,
     });
   } catch (err) {
@@ -197,27 +233,41 @@ async function* streamFingerprints(signal: AbortSignal): AsyncIterable<StreamEve
   }
 }
 
-export const apiClient = {
-  listFingerprints(): Promise<Fingerprint[]> {
-    return withColdStartRetry(() =>
-      request("/_slowquery/queries", FingerprintsListSchema, {
-        timeoutMs: SERVER_FETCH_TIMEOUT_MS,
-      }),
-    );
-  },
-  getFingerprint(id: string): Promise<FingerprintDetail> {
-    return withColdStartRetry(() =>
-      request(`/_slowquery/queries/${id}`, FingerprintDetailSchema, {
-        timeoutMs: SERVER_FETCH_TIMEOUT_MS,
-      }),
-    );
-  },
-  switchBranch(target: BranchName): Promise<SwitchBranchResponse> {
-    return request("/branches/switch", SwitchBranchResponseSchema, {
-      method: "POST",
-      body: { target },
-      timeoutMs: SWITCH_BRANCH_TIMEOUT_MS,
-    });
-  },
-  streamFingerprints,
-};
+export interface ApiClient {
+  listFingerprints(): Promise<Fingerprint[]>;
+  getFingerprint(id: string): Promise<FingerprintDetail>;
+  switchBranch(target: BranchName): Promise<SwitchBranchResponse>;
+  streamFingerprints(signal: AbortSignal): AsyncIterable<StreamEvent>;
+}
+
+export function createApiClient(transport: ApiTransport): ApiClient {
+  return {
+    listFingerprints() {
+      return withColdStartRetry(() =>
+        request(transport, "/_slowquery/queries", FingerprintsListSchema, {
+          timeoutMs: SERVER_FETCH_TIMEOUT_MS,
+        }),
+      );
+    },
+    getFingerprint(id) {
+      return withColdStartRetry(() =>
+        request(transport, `/_slowquery/queries/${id}`, FingerprintDetailSchema, {
+          timeoutMs: SERVER_FETCH_TIMEOUT_MS,
+        }),
+      );
+    },
+    switchBranch(target) {
+      return request(transport, "/branches/switch", SwitchBranchResponseSchema, {
+        method: "POST",
+        body: { target },
+        timeoutMs: SWITCH_BRANCH_TIMEOUT_MS,
+      });
+    },
+    streamFingerprints(signal) {
+      return streamFingerprints(transport, signal);
+    },
+  };
+}
+
+/** The browser's client: same-origin `/api/backend`, signed by the proxy. */
+export const apiClient: ApiClient = createApiClient(browserTransport);
